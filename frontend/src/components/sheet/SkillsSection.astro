@@ -1,0 +1,222 @@
+---
+// SkillsSection.astro - Sezione skills con tooltip hover
+---
+
+<section class="skills-section">
+  <h3 class="skills-title">Abilità</h3>
+  
+  <div class="skills-category">
+    <h4 class="category-label">Sfere Magiche</h4>
+    <div class="skills-grid" id="skills-spheres"></div>
+  </div>
+  
+  <div class="skills-category">
+    <h4 class="category-label">Arti Marziali</h4>
+    <div class="skills-grid" id="skills-martial"></div>
+  </div>
+  
+  <div class="skills-category">
+    <h4 class="category-label">Conoscenze</h4>
+    <div class="skills-grid" id="skills-knowledge"></div>
+  </div>
+  
+  <p class="skills-empty" id="skills-empty">Nessuna abilità appresa</p>
+</section>
+
+<!-- Tooltip globale -->
+<div class="skill-tooltip" id="skill-tooltip">
+  <div class="tooltip-header">
+    <span class="tooltip-name" id="tooltip-name"></span>
+    <span class="tooltip-type" id="tooltip-type"></span>
+  </div>
+  <div class="tooltip-mastery">
+    Maestria: <span id="tooltip-mastery">1</span>/10
+    <div class="mastery-bar">
+      <div class="mastery-fill" id="tooltip-mastery-bar"></div>
+    </div>
+  </div>
+  <p class="tooltip-desc" id="tooltip-desc"></p>
+  <div class="tooltip-tag">
+    <span id="tooltip-tag"></span>
+  </div>
+</div>
+
+<style>
+  .skills-section {
+    margin-bottom: var(--space-xl);
+  }
+  
+  .skills-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--smoke);
+    margin-bottom: var(--space-md);
+    font-weight: 400;
+  }
+  
+  .skills-category {
+    margin-bottom: var(--space-md);
+  }
+  
+  .category-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--ash);
+    margin-bottom: var(--space-sm);
+    font-weight: 400;
+  }
+  
+  .skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .skill-box {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--void);
+    font-weight: 600;
+  }
+  
+  .skill-box:hover {
+    transform: scale(1.15);
+    z-index: 10;
+  }
+  
+  /* Colori per categoria */
+  .skill-box--sphere { background: var(--vis); }
+  .skill-box--sphere.skill-box--ignis { background: var(--ignis); }
+  .skill-box--sphere.skill-box--aqua { background: var(--aqua); }
+  .skill-box--sphere.skill-box--terra { background: var(--terra); }
+  .skill-box--sphere.skill-box--ventus { background: var(--ventus); }
+  .skill-box--sphere.skill-box--mens { background: var(--mens); }
+  .skill-box--sphere.skill-box--anima { background: var(--anima); }
+  .skill-box--sphere.skill-box--vis { background: var(--vis); }
+  .skill-box--sphere.skill-box--vita { background: var(--vita); }
+  .skill-box--sphere.skill-box--spatium { background: var(--spatium); }
+  .skill-box--sphere.skill-box--tempus { background: var(--tempus); }
+  
+  .skill-box--martial { background: var(--ignis); }
+  .skill-box--knowledge { background: var(--mens); }
+  
+  /* Tipo passive vs active */
+  .skill-box--passive {
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  
+  .skill-box--active {
+    border: 2px solid var(--accent);
+  }
+  
+  .skills-empty {
+    font-size: 0.85rem;
+    color: var(--smoke);
+    font-style: italic;
+    display: none;
+  }
+  
+  .skills-empty.visible {
+    display: block;
+  }
+  
+  /* Tooltip */
+  .skill-tooltip {
+    position: fixed;
+    background: var(--void);
+    border: 1px solid var(--mist);
+    border-radius: 8px;
+    padding: var(--space-md);
+    width: 220px;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  
+  .skill-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .tooltip-name {
+    font-family: var(--font-narrative);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--parchment);
+  }
+  
+  .tooltip-type {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--shadow);
+    color: var(--ash);
+  }
+  
+  .tooltip-type.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  
+  .tooltip-mastery {
+    font-size: 0.75rem;
+    color: var(--bone);
+    margin-bottom: var(--space-sm);
+  }
+  
+  .tooltip-mastery span {
+    font-family: var(--font-mono);
+    color: var(--accent);
+  }
+  
+  .mastery-bar {
+    height: 4px;
+    background: var(--shadow);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  
+  .mastery-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  
+  .tooltip-desc {
+    font-size: 0.75rem;
+    color: var(--ash);
+    line-height: 1.4;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .tooltip-tag {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--smoke);
+    padding: var(--space-xs);
+    background: var(--shadow);
+    border-radius: 3px;
+  }
+</style>

@@ -1,0 +1,127 @@
+---
+// ChatContainer.astro - Contenitore principale della chat
+import ChatInput from './ChatInput.astro';
+import TypingIndicator from './TypingIndicator.astro';
+---
+
+<main class="chat-container">
+  <div class="chat-messages" id="chat-messages">
+    <!-- Messaggio iniziale -->
+    <div class="message message--ai">
+      <div class="message__label">Game Master</div>
+      <div class="message__content">
+        La nebbia si dirada lentamente, rivelando le torri di pietra antica che si stagliano contro un cielo color porpora. 
+        Ti trovi alle porte di <strong>Valdris</strong>, città mercantile al crocevia delle Dieci Sfere.
+        <br><br>
+        Chi sei, viaggiatore? Cosa ti porta in questo luogo dove la magia scorre come acqua tra le strade lastricate?
+      </div>
+    </div>
+    
+    <TypingIndicator />
+  </div>
+  
+  <ChatInput />
+</main>
+
+<style>
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--abyss);
+    border: 1px solid var(--mist);
+    flex: 1;
+  }
+  
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    
+    scrollbar-width: thin;
+    scrollbar-color: var(--mist) transparent;
+  }
+  
+  .chat-messages::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .chat-messages::-webkit-scrollbar-thumb {
+    background: var(--mist);
+    border-radius: 3px;
+  }
+  
+  /* Stili messaggi (duplicati qui per SSR) */
+  .message {
+    max-width: 85%;
+    animation: messageIn 0.3s ease-out;
+  }
+  
+  @keyframes messageIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .message--user { align-self: flex-end; }
+  .message--ai { align-self: flex-start; }
+  
+  .message__label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--smoke);
+    margin-bottom: var(--space-xs);
+    padding-left: var(--space-sm);
+  }
+  
+  .message--user .message__label {
+    text-align: right;
+    padding-right: var(--space-sm);
+    padding-left: 0;
+  }
+  
+  .message__content {
+    padding: var(--space-md) var(--space-lg);
+    border-radius: 12px;
+    line-height: 1.7;
+  }
+  
+  .message--user .message__content {
+    background: linear-gradient(135deg, var(--accent-dim) 0%, var(--shadow) 100%);
+    border: 1px solid var(--accent);
+    border-bottom-right-radius: 4px;
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+  }
+  
+  .message--ai .message__content {
+    background: var(--shadow);
+    border: 1px solid var(--mist);
+    border-bottom-left-radius: 4px;
+    font-family: var(--font-narrative);
+    font-size: 1.05rem;
+    font-style: italic;
+    color: var(--parchment);
+  }
+  
+  .message__content :global(.tag) {
+    display: inline;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-style: normal;
+    background: var(--void);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin: 0 2px;
+    border: 1px solid var(--mist);
+  }
+</style>

@@ -1,0 +1,37 @@
+---
+// CharacterGrid.astro - Griglia degli slot personaggio
+import CharacterSlot from './CharacterSlot.astro';
+
+// Gli slot verranno popolati via JavaScript
+const slots = Array.from({ length: 6 }, (_, i) => ({ slot: i, exists: false }));
+---
+
+<div class="character-grid" id="character-grid">
+  {slots.map(s => (
+    <CharacterSlot 
+      slot={s.slot} 
+      exists={s.exists}
+    />
+  ))}
+</div>
+
+<style>
+  .character-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-lg);
+    padding: var(--space-lg) 0;
+  }
+  
+  @media (min-width: 768px) {
+    .character-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .character-grid {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
+</style>

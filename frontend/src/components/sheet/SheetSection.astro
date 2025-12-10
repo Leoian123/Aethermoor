@@ -1,0 +1,28 @@
+---
+// SheetSection.astro - Sezione generica della scheda
+export interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<section class="sheet-section">
+  <h3 class="sheet-section__title">{title}</h3>
+  <slot />
+</section>
+
+<style>
+  .sheet-section {
+    margin-bottom: var(--space-xl);
+  }
+  
+  .sheet-section__title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--smoke);
+    margin-bottom: var(--space-md);
+    font-weight: 400;
+  }
+</style>

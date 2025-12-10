@@ -1,0 +1,85 @@
+---
+// ChatInput.astro - Area input per messaggi
+---
+
+<div class="chat-input-area">
+  <textarea 
+    class="chat-input" 
+    id="chat-input" 
+    placeholder="Descrivi la tua azione..."
+    rows="1"
+  ></textarea>
+  <button class="btn-send" id="btn-send">
+    <svg viewBox="0 0 24 24">
+      <line x1="22" y1="2" x2="11" y2="13"></line>
+      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+    </svg>
+  </button>
+</div>
+
+<style>
+  .chat-input-area {
+    display: flex;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--shadow);
+    border-top: 1px solid var(--mist);
+  }
+  
+  .chat-input {
+    flex: 1;
+    padding: var(--space-md);
+    background: var(--abyss);
+    border: 1px solid var(--mist);
+    border-radius: 8px;
+    color: var(--bone);
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    resize: none;
+    min-height: 48px;
+    max-height: 150px;
+    transition: var(--transition-smooth);
+  }
+  
+  .chat-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  
+  .chat-input::placeholder {
+    color: var(--smoke);
+  }
+  
+  .btn-send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: var(--void);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+  }
+  
+  .btn-send:hover:not(:disabled) {
+    background: var(--parchment);
+    transform: scale(1.05);
+  }
+  
+  .btn-send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .btn-send svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+  }
+</style>

@@ -1,0 +1,119 @@
+[
+  {
+    "_comment": "========== ARMI =========="
+  },
+  {
+    "id": "eq_iron_sword",
+    "name": "Spada di Ferro",
+    "type": "weapon",
+    "slot": "main_hand",
+    "description": "Una solida spada di ferro, l'arma di ogni guerriero.",
+    "stats_bonus": {"damage": 15, "accuracy": 5},
+    "requirements": {"str": 12}
+  },
+  {
+    "id": "eq_ash_staff",
+    "name": "Bastone di Frassino",
+    "type": "weapon",
+    "slot": "two_hand",
+    "description": "Un bastone incantato che amplifica il potere magico.",
+    "stats_bonus": {"spell_power": 10, "mana": 20},
+    "requirements": {"int": 12}
+  },
+  {
+    "id": "eq_sharp_dagger",
+    "name": "Daga Affilata",
+    "type": "weapon",
+    "slot": "main_hand",
+    "description": "Una lama corta perfetta per colpi precisi.",
+    "stats_bonus": {"damage": 10, "crit_chance": 8},
+    "requirements": {"dex": 12}
+  },
+  {
+    "id": "eq_blessed_mace",
+    "name": "Mazza Benedetta",
+    "type": "weapon",
+    "slot": "main_hand",
+    "description": "Un'arma consacrata efficace contro i non-morti.",
+    "stats_bonus": {"damage": 12, "holy_damage": 5},
+    "requirements": {"str": 10}
+  },
+  {
+    "_comment": "========== ARMATURE =========="
+  },
+  {
+    "id": "eq_leather_armor",
+    "name": "Armatura di Cuoio Rinforzato",
+    "type": "armor",
+    "slot": "chest",
+    "description": "Cuoio indurito che offre protezione senza limitare i movimenti.",
+    "stats_bonus": {"armor": 15, "evasion": 5},
+    "requirements": {}
+  },
+  {
+    "id": "eq_cloth_robes",
+    "name": "Vesti di Stoffa",
+    "type": "armor",
+    "slot": "chest",
+    "description": "Vesti leggere intessute con fili arcani.",
+    "stats_bonus": {"armor": 5, "mana_regen": 3},
+    "requirements": {}
+  },
+  {
+    "id": "eq_soft_leather",
+    "name": "Armatura di Cuoio Morbido",
+    "type": "armor",
+    "slot": "chest",
+    "description": "Cuoio flessibile che non produce rumore.",
+    "stats_bonus": {"armor": 10, "stealth": 10},
+    "requirements": {}
+  },
+  {
+    "id": "eq_sacred_robes",
+    "name": "Vesti Sacre",
+    "type": "armor",
+    "slot": "chest",
+    "description": "Abiti benedetti che proteggono dalle forze oscure.",
+    "stats_bonus": {"armor": 8, "magic_resist": 10},
+    "requirements": {}
+  },
+  {
+    "_comment": "========== ACCESSORI =========="
+  },
+  {
+    "id": "eq_wooden_shield",
+    "name": "Scudo di Legno",
+    "type": "accessory",
+    "slot": "off_hand",
+    "description": "Uno scudo robusto di legno rinforzato.",
+    "stats_bonus": {"block_chance": 15, "armor": 5},
+    "requirements": {"str": 10}
+  },
+  {
+    "id": "eq_basic_grimoire",
+    "name": "Grimorio Basilare",
+    "type": "accessory",
+    "slot": "off_hand",
+    "description": "Un libro di incantesimi per maghi alle prime armi.",
+    "stats_bonus": {"spell_power": 5, "mana": 10},
+    "requirements": {"int": 10}
+  },
+  {
+    "id": "eq_lockpick_set",
+    "name": "Kit da Scasso",
+    "type": "accessory",
+    "slot": "belt",
+    "description": "Strumenti per aprire serrature e disattivare trappole.",
+    "stats_bonus": {"lockpicking": 20, "trap_disarm": 15},
+    "requirements": {"dex": 10}
+  },
+  {
+    "id": "eq_holy_symbol",
+    "name": "Simbolo Sacro",
+    "type": "accessory",
+    "slot": "neck",
+    "description": "Un simbolo della divinità che amplifica i poteri divini.",
+    "stats_bonus": {"healing_power": 10, "holy_damage": 5},
+    "requirements": {}
+  }
+]

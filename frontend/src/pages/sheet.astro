@@ -1,0 +1,902 @@
+---
+// sheet.astro - Scheda personaggio stile MMO
+import Layout from '../components/Layout.astro';
+import Header from '../components/ui/Header.astro';
+---
+
+<Layout title="STATISFY RPG - Scheda">
+  <div class="sheet-page">
+    <Header showBackButton />
+    
+    <main class="sheet-main">
+      <!-- Header personaggio -->
+      <section class="char-header">
+        <div class="char-portrait">
+          <img src="/placeholder-portrait.png" alt="Portrait" />
+          <span class="char-level" id="char-level">1</span>
+        </div>
+        <div class="char-info">
+          <h1 class="char-name" id="char-name">—</h1>
+          <span class="char-class" id="char-class">—</span>
+          <div class="char-bars">
+            <div class="resource-bar hp-bar">
+              <div class="bar-fill" id="hp-bar"></div>
+              <span class="bar-text"><span id="hp-current">0</span>/<span id="hp-max">0</span></span>
+            </div>
+            <div class="resource-bar mana-bar">
+              <div class="bar-fill" id="mana-bar"></div>
+              <span class="bar-text"><span id="mana-current">0</span>/<span id="mana-max">0</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="char-stats">
+          <div class="stat-mini"><span class="stat-icon">💪</span><span id="stat-str">10</span></div>
+          <div class="stat-mini"><span class="stat-icon">⚡</span><span id="stat-dex">10</span></div>
+          <div class="stat-mini"><span class="stat-icon">❤️</span><span id="stat-vit">10</span></div>
+          <div class="stat-mini"><span class="stat-icon">🧠</span><span id="stat-int">10</span></div>
+        </div>
+      </section>
+      
+      <!-- Tabs -->
+      <nav class="tabs">
+        <button class="tab active" data-tab="skills">⚔️ Abilità</button>
+        <button class="tab" data-tab="equipment">🛡️ Equipaggiamento</button>
+      </nav>
+      
+      <!-- Panel: Abilità -->
+      <section class="panel active" id="panel-skills">
+        <div class="skills-section">
+          <h3 class="section-label">Sfere Magiche</h3>
+          <div class="skills-grid" id="skills-spheres"></div>
+        </div>
+        <div class="skills-section">
+          <h3 class="section-label">Arti Marziali</h3>
+          <div class="skills-grid" id="skills-martial"></div>
+        </div>
+        <div class="skills-section">
+          <h3 class="section-label">Conoscenze</h3>
+          <div class="skills-grid" id="skills-knowledge"></div>
+        </div>
+        <p class="empty-msg" id="skills-empty">Nessuna abilità appresa</p>
+      </section>
+      
+      <!-- Panel: Equipaggiamento -->
+      <section class="panel" id="panel-equipment">
+        <div class="equip-layout">
+          <!-- Slot equipaggiamento -->
+          <div class="equip-slots">
+            <h3 class="section-label">Equipaggiato</h3>
+            <div class="slots-grid">
+              <div class="equip-slot" data-slot="main_hand" data-label="Mano Principale"></div>
+              <div class="equip-slot" data-slot="off_hand" data-label="Mano Secondaria"></div>
+              <div class="equip-slot" data-slot="two_hand" data-label="Due Mani"></div>
+              <div class="equip-slot" data-slot="chest" data-label="Armatura"></div>
+              <div class="equip-slot" data-slot="neck" data-label="Collana"></div>
+              <div class="equip-slot" data-slot="belt" data-label="Cintura"></div>
+            </div>
+          </div>
+          
+          <!-- Inventario -->
+          <div class="inventory-section">
+            <h3 class="section-label">Inventario</h3>
+            <div class="inventory-grid" id="inventory-grid"></div>
+            <p class="empty-msg" id="inv-empty">Inventario vuoto</p>
+          </div>
+        </div>
+      </section>
+    </main>
+    
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip">
+      <div class="tooltip-header">
+        <span class="tooltip-name" id="tip-name"></span>
+        <span class="tooltip-type" id="tip-type"></span>
+      </div>
+      <div class="tooltip-body" id="tip-body"></div>
+      <div class="tooltip-footer" id="tip-footer"></div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { getCharacterBySlot } from '../lib/api.js';
+  
+  let character = null;
+  const tooltip = document.getElementById('tooltip');
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  const slot = parseInt(urlParams.get('slot') || sessionStorage.getItem('currentSlot') || '0');
+  sessionStorage.setItem('currentSlot', slot.toString());
+  
+  // ══════════════════════════════════════════════════════
+  // INIT
+  // ══════════════════════════════════════════════════════
+  
+  async function init() {
+    try {
+      const result = await getCharacterBySlot(slot);
+      if (!result.exists) {
+        window.location.href = '/';
+        return;
+      }
+      
+      character = result.character;
+      renderHeader();
+      renderSkills();
+      renderEquipment();
+      renderInventory();
+      
+    } catch (e) {
+      console.error('Errore:', e);
+      window.location.href = '/';
+    }
+  }
+  
+  // ══════════════════════════════════════════════════════
+  // HEADER
+  // ══════════════════════════════════════════════════════
+  
+  function renderHeader() {
+    document.getElementById('char-name').textContent = character.name;
+    document.getElementById('char-class').textContent = character.class?.name || '—';
+    document.getElementById('char-level').textContent = character.level;
+    
+    // HP
+    document.getElementById('hp-current').textContent = character.hp_current;
+    document.getElementById('hp-max').textContent = character.hp_max;
+    document.getElementById('hp-bar').style.width = `${(character.hp_current / character.hp_max) * 100}%`;
+    
+    // Mana
+    document.getElementById('mana-current').textContent = character.mana_current;
+    document.getElementById('mana-max').textContent = character.mana_max;
+    document.getElementById('mana-bar').style.width = `${(character.mana_current / character.mana_max) * 100}%`;
+    
+    // Stats
+    document.getElementById('stat-str').textContent = character.str;
+    document.getElementById('stat-dex').textContent = character.dex;
+    document.getElementById('stat-vit').textContent = character.vit;
+    document.getElementById('stat-int').textContent = character.int;
+  }
+  
+  // ══════════════════════════════════════════════════════
+  // SKILLS
+  // ══════════════════════════════════════════════════════
+  
+  function renderSkills() {
+    if (!character.skills?.length) {
+      document.getElementById('skills-empty').style.display = 'block';
+      return;
+    }
+    
+    document.getElementById('skills-empty').style.display = 'none';
+    
+    const spheres = character.skills.filter(s => s.category === 'sphere');
+    const martial = character.skills.filter(s => s.category === 'martial');
+    const knowledge = character.skills.filter(s => s.category === 'knowledge');
+    
+    document.getElementById('skills-spheres').innerHTML = spheres.map(createSkillCard).join('');
+    document.getElementById('skills-martial').innerHTML = martial.map(createSkillCard).join('');
+    document.getElementById('skills-knowledge').innerHTML = knowledge.map(createSkillCard).join('');
+    
+    // Tooltip listeners
+    document.querySelectorAll('.skill-card').forEach(card => {
+      card.addEventListener('mouseenter', showSkillTooltip);
+      card.addEventListener('mousemove', moveTooltip);
+      card.addEventListener('mouseleave', hideTooltip);
+    });
+  }
+  
+  function createSkillCard(skill) {
+    const color = getSkillColor(skill.tag);
+    const icon = getSkillIcon(skill);
+    const typeClass = skill.type === 'active' ? 'active' : 'passive';
+    
+    return `
+      <div class="skill-card ${typeClass}" style="--skill-color: ${color}" data-skill='${JSON.stringify(skill).replace(/'/g, "&#39;")}'>
+        <div class="skill-icon">${icon}</div>
+        <div class="skill-level">${skill.mastery}</div>
+        <div class="skill-name">${skill.name}</div>
+      </div>
+    `;
+  }
+  
+  function getSkillIcon(skill) {
+    const icons = {
+      'IGNIS': '🔥', 'AQUA': '💧', 'TERRA': '🪨', 'VENTUS': '💨',
+      'MENS': '🧿', 'ANIMA': '👻', 'VIS': '⚡', 'VITA': '💚',
+      'SPATIUM': '🌀', 'TEMPUS': '⏳',
+      'SWORD': '⚔️', 'DAGGER': '🗡️', 'SHIELD': '🛡️',
+      'ALCHEMY': '⚗️', 'LORE': '📜', 'MEDICINE': '💊'
+    };
+    
+    for (const [key, icon] of Object.entries(icons)) {
+      if (skill.tag.includes(key)) return icon;
+    }
+    return '✨';
+  }
+  
+  function getSkillColor(tag) {
+    const colors = {
+      'IGNIS': '#ff6b35', 'AQUA': '#4ecdc4', 'TERRA': '#8b7355', 'VENTUS': '#a8d5e5',
+      'MENS': '#9b59b6', 'ANIMA': '#1abc9c', 'VIS': '#f1c40f', 'VITA': '#2ecc71',
+      'SPATIUM': '#3498db', 'TEMPUS': '#e74c3c',
+      'SWORD': '#e67e22', 'DAGGER': '#c0392b', 'SHIELD': '#7f8c8d',
+      'ALCHEMY': '#8e44ad', 'LORE': '#2980b9', 'MEDICINE': '#27ae60'
+    };
+    
+    for (const [key, color] of Object.entries(colors)) {
+      if (tag.includes(key)) return color;
+    }
+    return '#c9a959';
+  }
+  
+  function showSkillTooltip(e) {
+    const skill = JSON.parse(e.currentTarget.dataset.skill);
+    
+    document.getElementById('tip-name').textContent = skill.name;
+    document.getElementById('tip-type').textContent = skill.type === 'active' ? 'Attiva' : 'Passiva';
+    document.getElementById('tip-type').className = `tooltip-type ${skill.type}`;
+    
+    let body = `<p>${skill.description}</p>`;
+    body += `<div class="tip-mastery">Maestria: ${skill.mastery}/10</div>`;
+    
+    if (skill.base_cost > 0) {
+      body += `<div class="tip-stat">Costo: ${skill.base_cost} mana</div>`;
+    }
+    if (skill.cooldown > 0) {
+      body += `<div class="tip-stat">Cooldown: ${skill.cooldown} turni</div>`;
+    }
+    
+    document.getElementById('tip-body').innerHTML = body;
+    document.getElementById('tip-footer').textContent = skill.tag;
+    
+    tooltip.classList.add('visible');
+    moveTooltip(e);
+  }
+  
+  // ══════════════════════════════════════════════════════
+  // EQUIPMENT
+  // ══════════════════════════════════════════════════════
+  
+  function renderEquipment() {
+    // Reset slots
+    document.querySelectorAll('.equip-slot').forEach(slot => {
+      const label = slot.dataset.label;
+      slot.innerHTML = `<div class="slot-empty">${label}</div>`;
+      slot.classList.remove('filled');
+    });
+    
+    if (!character.equipment?.length) return;
+    
+    character.equipment.forEach(item => {
+      const slotEl = document.querySelector(`.equip-slot[data-slot="${item.equipped_slot}"]`);
+      if (slotEl) {
+        slotEl.innerHTML = createItemCard(item, true);
+        slotEl.classList.add('filled');
+      }
+    });
+    
+    // Add listeners
+    document.querySelectorAll('.equip-slot .item-card').forEach(card => {
+      card.addEventListener('mouseenter', showItemTooltip);
+      card.addEventListener('mousemove', moveTooltip);
+      card.addEventListener('mouseleave', hideTooltip);
+      card.addEventListener('click', () => unequipItem(card));
+    });
+  }
+  
+  function renderInventory() {
+    const grid = document.getElementById('inventory-grid');
+    const empty = document.getElementById('inv-empty');
+    
+    if (!character.inventory?.length) {
+      empty.style.display = 'block';
+      grid.innerHTML = '';
+      return;
+    }
+    
+    empty.style.display = 'none';
+    grid.innerHTML = character.inventory.map(item => createItemCard(item, false)).join('');
+    
+    // Add listeners
+    document.querySelectorAll('#inventory-grid .item-card').forEach(card => {
+      card.addEventListener('mouseenter', showItemTooltip);
+      card.addEventListener('mousemove', moveTooltip);
+      card.addEventListener('mouseleave', hideTooltip);
+      card.addEventListener('click', () => equipItem(card));
+    });
+  }
+  
+  function createItemCard(item, equipped) {
+    const rarity = item.rarity || 'common';
+    const icon = getItemIcon(item);
+    const qty = item.quantity > 1 ? `<span class="item-qty">×${item.quantity}</span>` : '';
+    
+    return `
+      <div class="item-card ${rarity}" data-item='${JSON.stringify(item).replace(/'/g, "&#39;")}' data-equipped="${equipped}">
+        <div class="item-icon">${icon}</div>
+        <div class="item-name">${item.name || item.item_name}</div>
+        ${qty}
+        <div class="item-action">${equipped ? '▼' : '▲'}</div>
+      </div>
+    `;
+  }
+  
+  function getItemIcon(item) {
+    const type = item.type || '';
+    const icons = {
+      'weapon': '⚔️', 'armor': '🛡️', 'accessory': '💍',
+      'consumable': '🧪', 'material': '📦', 'quest': '📜'
+    };
+    return icons[type] || '📦';
+  }
+  
+  function showItemTooltip(e) {
+    const item = JSON.parse(e.currentTarget.dataset.item);
+    const equipped = e.currentTarget.dataset.equipped === 'true';
+    
+    document.getElementById('tip-name').textContent = item.name || item.item_name;
+    document.getElementById('tip-type').textContent = item.type || 'Oggetto';
+    document.getElementById('tip-type').className = `tooltip-type item ${item.rarity || 'common'}`;
+    
+    let body = '';
+    if (item.stats_bonus) {
+      for (const [stat, val] of Object.entries(item.stats_bonus)) {
+        body += `<div class="tip-stat">+${val} ${stat.toUpperCase()}</div>`;
+      }
+    }
+    if (item.quantity > 1) {
+      body += `<div class="tip-stat">Quantità: ${item.quantity}</div>`;
+    }
+    
+    document.getElementById('tip-body').innerHTML = body || '<p>Nessun bonus</p>';
+    document.getElementById('tip-footer').textContent = equipped ? 'Click per rimuovere' : 'Click per equipaggiare';
+    
+    tooltip.classList.add('visible');
+    moveTooltip(e);
+  }
+  
+  function equipItem(card) {
+    const item = JSON.parse(card.dataset.item);
+    console.log('Equipaggia:', item);
+    // TODO: API call per equipaggiare
+    alert(`Equipaggia: ${item.item_name}\n(Non ancora implementato)`);
+  }
+  
+  function unequipItem(card) {
+    const item = JSON.parse(card.dataset.item);
+    console.log('Rimuovi:', item);
+    // TODO: API call per rimuovere
+    alert(`Rimuovi: ${item.name}\n(Non ancora implementato)`);
+  }
+  
+  // ══════════════════════════════════════════════════════
+  // TOOLTIP
+  // ══════════════════════════════════════════════════════
+  
+  function moveTooltip(e) {
+    let x = e.clientX + 15;
+    let y = e.clientY + 15;
+    
+    const rect = tooltip.getBoundingClientRect();
+    if (x + rect.width > window.innerWidth) x = e.clientX - rect.width - 15;
+    if (y + rect.height > window.innerHeight) y = e.clientY - rect.height - 15;
+    
+    tooltip.style.left = `${x}px`;
+    tooltip.style.top = `${y}px`;
+  }
+  
+  function hideTooltip() {
+    tooltip.classList.remove('visible');
+  }
+  
+  // ══════════════════════════════════════════════════════
+  // TABS
+  // ══════════════════════════════════════════════════════
+  
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      
+      tab.classList.add('active');
+      document.getElementById(`panel-${tab.dataset.tab}`).classList.add('active');
+    });
+  });
+  
+  init();
+</script>
+
+<style>
+  .sheet-page {
+    min-height: 100vh;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--space-md);
+  }
+  
+  .sheet-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+  
+  /* ══════════════════════════════════════════════════════
+     HEADER
+     ══════════════════════════════════════════════════════ */
+  
+  .char-header {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: linear-gradient(135deg, var(--abyss) 0%, var(--shadow) 100%);
+    border: 1px solid var(--mist);
+    border-radius: 12px;
+  }
+  
+  .char-portrait {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 15px rgba(201, 169, 89, 0.3);
+  }
+  
+  .char-portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .char-level {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 24px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: var(--void);
+  }
+  
+  .char-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .char-name {
+    font-family: var(--font-narrative);
+    font-size: 1.5rem;
+    color: var(--parchment);
+    margin: 0;
+  }
+  
+  .char-class {
+    color: var(--accent);
+    font-size: 0.9rem;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .char-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .resource-bar {
+    position: relative;
+    height: 18px;
+    background: var(--void);
+    border-radius: 9px;
+    overflow: hidden;
+    border: 1px solid var(--mist);
+  }
+  
+  .bar-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+  
+  .hp-bar .bar-fill {
+    background: linear-gradient(90deg, #c0392b 0%, #e74c3c 50%, #27ae60 100%);
+  }
+  
+  .mana-bar .bar-fill {
+    background: linear-gradient(90deg, #2980b9 0%, #3498db 50%, #9b59b6 100%);
+  }
+  
+  .bar-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    color: white;
+    text-shadow: 0 1px 2px black;
+  }
+  
+  .char-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-xs);
+    align-content: center;
+  }
+  
+  .stat-mini {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: var(--shadow);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--bone);
+  }
+  
+  .stat-icon {
+    font-size: 0.9rem;
+  }
+  
+  /* ══════════════════════════════════════════════════════
+     TABS
+     ══════════════════════════════════════════════════════ */
+  
+  .tabs {
+    display: flex;
+    gap: var(--space-sm);
+  }
+  
+  .tab {
+    flex: 1;
+    padding: var(--space-md);
+    background: var(--shadow);
+    border: 1px solid var(--mist);
+    border-radius: 8px;
+    color: var(--ash);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .tab:hover {
+    border-color: var(--accent);
+    color: var(--bone);
+  }
+  
+  .tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--void);
+  }
+  
+  /* ══════════════════════════════════════════════════════
+     PANELS
+     ══════════════════════════════════════════════════════ */
+  
+  .panel {
+    display: none;
+    background: var(--abyss);
+    border: 1px solid var(--mist);
+    border-radius: 12px;
+    padding: var(--space-lg);
+  }
+  
+  .panel.active {
+    display: block;
+    animation: fadeIn 0.2s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .section-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--smoke);
+    margin: 0 0 var(--space-md);
+    padding-bottom: var(--space-xs);
+    border-bottom: 1px solid var(--mist);
+  }
+  
+  .empty-msg {
+    text-align: center;
+    color: var(--smoke);
+    font-style: italic;
+    padding: var(--space-xl);
+    display: none;
+  }
+  
+  .skills-section {
+    margin-bottom: var(--space-lg);
+  }
+  
+  /* ══════════════════════════════════════════════════════
+     SKILL CARDS
+     ══════════════════════════════════════════════════════ */
+  
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--space-sm);
+  }
+  
+  .skill-card {
+    position: relative;
+    background: linear-gradient(145deg, var(--shadow) 0%, var(--void) 100%);
+    border: 2px solid var(--skill-color);
+    border-radius: 10px;
+    padding: var(--space-sm);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    overflow: hidden;
+  }
+  
+  .skill-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, var(--skill-color) 0%, transparent 70%);
+    opacity: 0.1;
+  }
+  
+  .skill-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3), 0 0 15px var(--skill-color);
+  }
+  
+  .skill-card.passive {
+    border-style: dashed;
+  }
+  
+  .skill-icon {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .skill-level {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    background: var(--skill-color);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: var(--void);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .skill-name {
+    font-size: 0.7rem;
+    color: var(--bone);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* ══════════════════════════════════════════════════════
+     EQUIPMENT
+     ══════════════════════════════════════════════════════ */
+  
+  .equip-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+  }
+  
+  @media (max-width: 600px) {
+    .equip-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+  
+  .equip-slot {
+    aspect-ratio: 1;
+    background: var(--shadow);
+    border: 2px dashed var(--mist);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  
+  .equip-slot.filled {
+    border-style: solid;
+    border-color: var(--accent);
+  }
+  
+  .slot-empty {
+    font-size: 0.65rem;
+    color: var(--smoke);
+    text-align: center;
+    text-transform: uppercase;
+  }
+  
+  /* ══════════════════════════════════════════════════════
+     ITEM CARDS
+     ══════════════════════════════════════════════════════ */
+  
+  .inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--space-sm);
+  }
+  
+  .item-card {
+    position: relative;
+    background: linear-gradient(145deg, var(--shadow) 0%, var(--void) 100%);
+    border: 2px solid var(--mist);
+    border-radius: 10px;
+    padding: var(--space-sm);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .item-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+  
+  .item-card:hover .item-action {
+    opacity: 1;
+  }
+  
+  /* Rarità */
+  .item-card.common { border-color: #95a5a6; }
+  .item-card.uncommon { border-color: #27ae60; box-shadow: 0 0 10px rgba(39, 174, 96, 0.3); }
+  .item-card.rare { border-color: #3498db; box-shadow: 0 0 10px rgba(52, 152, 219, 0.3); }
+  .item-card.epic { border-color: #9b59b6; box-shadow: 0 0 10px rgba(155, 89, 182, 0.3); }
+  .item-card.legendary { border-color: #f39c12; box-shadow: 0 0 15px rgba(243, 156, 18, 0.5); }
+  
+  .item-icon {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+  }
+  
+  .item-name {
+    font-size: 0.7rem;
+    color: var(--bone);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .item-qty {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    background: var(--void);
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+  
+  .item-action {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 0.6rem;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  
+  /* ══════════════════════════════════════════════════════
+     TOOLTIP
+     ══════════════════════════════════════════════════════ */
+  
+  .tooltip {
+    position: fixed;
+    background: var(--void);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: var(--space-md);
+    width: 220px;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.15s, transform 0.15s;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  
+  .tooltip.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--mist);
+  }
+  
+  .tooltip-name {
+    font-family: var(--font-narrative);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--parchment);
+  }
+  
+  .tooltip-type {
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: var(--shadow);
+    color: var(--ash);
+  }
+  
+  .tooltip-type.active { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+  .tooltip-type.passive { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+  .tooltip-type.item.uncommon { background: rgba(39, 174, 96, 0.2); color: #27ae60; }
+  .tooltip-type.item.rare { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+  .tooltip-type.item.epic { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
+  .tooltip-type.item.legendary { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+  
+  .tooltip-body {
+    font-size: 0.8rem;
+    color: var(--ash);
+    line-height: 1.5;
+  }
+  
+  .tooltip-body p {
+    margin: 0 0 var(--space-sm);
+  }
+  
+  .tip-mastery {
+    color: var(--accent);
+    font-size: 0.75rem;
+    margin-top: var(--space-sm);
+  }
+  
+  .tip-stat {
+    color: var(--vita);
+    font-size: 0.75rem;
+  }
+  
+  .tooltip-footer {
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--mist);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--smoke);
+  }
+</style>

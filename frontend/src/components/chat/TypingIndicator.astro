@@ -1,0 +1,45 @@
+---
+// TypingIndicator.astro - Indicatore "sta scrivendo"
+---
+
+<div class="typing-indicator" id="typing-indicator">
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
+
+<style>
+  .typing-indicator {
+    display: none;
+    gap: 4px;
+    padding: var(--space-md);
+    align-self: flex-start;
+  }
+  
+  .typing-indicator.active {
+    display: flex;
+  }
+  
+  .typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: var(--smoke);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out;
+  }
+  
+  .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  
+  @keyframes typingBounce {
+    0%, 80%, 100% {
+      transform: scale(0.8);
+      opacity: 0.5;
+    }
+    40% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+</style>

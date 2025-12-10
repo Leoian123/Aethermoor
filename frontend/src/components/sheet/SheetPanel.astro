@@ -1,0 +1,220 @@
+---
+// SheetPanel.astro - Pannello scheda personaggio completo
+import SheetSection from './SheetSection.astro';
+import StatRow from './StatRow.astro';
+import HpBar from './HpBar.astro';
+import SkillsSection from './SkillsSection.astro';
+---
+
+<aside class="sheet-panel" id="sheet-panel">
+  <div class="sheet-header">
+    <h2 class="sheet-title">Scheda Personaggio</h2>
+    <button class="btn-close" id="btn-close-sheet">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+  
+  <!-- Identità -->
+  <SheetSection title="Identità">
+    <StatRow label="Nome" id="stat-name" />
+    <StatRow label="Classe" id="stat-class" />
+    <StatRow label="Livello" value="1" id="stat-level" />
+  </SheetSection>
+  
+  <!-- Vitalità -->
+  <SheetSection title="Vitalità">
+    <div class="vitals-grid">
+      <div class="vital-block">
+        <span class="vital-label">HP</span>
+        <span class="vital-value">
+          <span id="stat-hp-current">100</span>/<span id="stat-hp-max">100</span>
+        </span>
+        <HpBar id="hp-bar-fill" />
+      </div>
+      <div class="vital-block">
+        <span class="vital-label">Mana</span>
+        <span class="vital-value">
+          <span id="stat-mana-current">50</span>/<span id="stat-mana-max">50</span>
+        </span>
+        <div class="mana-bar">
+          <div class="mana-bar__fill" id="mana-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+  </SheetSection>
+  
+  <!-- Statistiche -->
+  <SheetSection title="Statistiche">
+    <div class="stats-grid">
+      <div class="stat-block">
+        <span class="stat-abbr">STR</span>
+        <span class="stat-num" id="stat-str">10</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-abbr">DEX</span>
+        <span class="stat-num" id="stat-dex">10</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-abbr">VIT</span>
+        <span class="stat-num" id="stat-vit">10</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-abbr">INT</span>
+        <span class="stat-num" id="stat-int">10</span>
+      </div>
+    </div>
+  </SheetSection>
+  
+  <!-- Abilità -->
+  <SkillsSection />
+  
+  <!-- Equipaggiamento -->
+  <SheetSection title="Equipaggiamento">
+    <div id="equipment-list">
+      <StatRow label="Nessun equipaggiamento" empty />
+    </div>
+  </SheetSection>
+  
+  <!-- Inventario -->
+  <SheetSection title="Inventario">
+    <div id="inventory-list">
+      <StatRow label="Inventario vuoto" empty />
+    </div>
+  </SheetSection>
+  
+  <!-- Condizioni -->
+  <SheetSection title="Condizioni">
+    <div id="conditions-list">
+      <StatRow label="Nessuna condizione attiva" empty />
+    </div>
+  </SheetSection>
+</aside>
+
+<style>
+  .sheet-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 380px;
+    max-width: 90vw;
+    height: 100vh;
+    background: var(--abyss);
+    border-left: 1px solid var(--mist);
+    transform: translateX(100%);
+    transition: var(--transition-smooth);
+    z-index: 101;
+    overflow-y: auto;
+    padding: var(--space-xl);
+  }
+  
+  .sheet-panel.active {
+    transform: translateX(0);
+  }
+  
+  .sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--mist);
+  }
+  
+  .sheet-title {
+    font-family: var(--font-narrative);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  
+  .btn-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--mist);
+    border-radius: 6px;
+    color: var(--ash);
+    cursor: pointer;
+    transition: var(--transition-fast);
+  }
+  
+  .btn-close:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  /* Vitals */
+  .vitals-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  
+  .vital-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .vital-label {
+    font-size: 0.75rem;
+    color: var(--ash);
+    text-transform: uppercase;
+  }
+  
+  .vital-value {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--parchment);
+  }
+  
+  .mana-bar {
+    height: 8px;
+    background: var(--shadow);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .mana-bar__fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--spatium) 0%, var(--mens) 100%);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    width: 100%;
+  }
+  
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-sm);
+  }
+  
+  .stat-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-sm);
+    background: var(--shadow);
+    border-radius: 6px;
+  }
+  
+  .stat-abbr {
+    font-size: 0.65rem;
+    color: var(--smoke);
+    text-transform: uppercase;
+    margin-bottom: var(--space-xs);
+  }
+  
+  .stat-num {
+    font-family: var(--font-mono);
+    font-size: 1.2rem;
+    color: var(--accent);
+  }
+</style>

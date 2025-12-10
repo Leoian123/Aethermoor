@@ -1,0 +1,28 @@
+---
+// Overlay.astro - Overlay per pannelli slide e modali
+export interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+---
+
+<div class="overlay" id={id}></div>
+
+<style>
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition-smooth);
+    z-index: 100;
+  }
+  
+  .overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+</style>

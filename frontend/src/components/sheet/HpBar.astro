@@ -1,0 +1,32 @@
+---
+// HpBar.astro - Barra vita
+export interface Props {
+  current?: number;
+  max?: number;
+  id?: string;
+}
+
+const { current = 100, max = 100, id = 'hp-bar-fill' } = Astro.props;
+const percent = Math.round((current / max) * 100);
+---
+
+<div class="hp-bar">
+  <div class="hp-bar__fill" id={id} style={`width: ${percent}%`}></div>
+</div>
+
+<style>
+  .hp-bar {
+    height: 8px;
+    background: var(--shadow);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: var(--space-sm);
+  }
+  
+  .hp-bar__fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--vita) 0%, var(--aqua) 100%);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+</style>

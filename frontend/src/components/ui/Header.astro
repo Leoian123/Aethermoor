@@ -1,0 +1,80 @@
+---
+// Header.astro - Header con logo e azioni
+export interface Props {
+  showBackButton?: boolean;
+}
+
+const { showBackButton = false } = Astro.props;
+---
+
+<header class="header">
+  <div class="header__left">
+    {showBackButton && (
+      <a href="/" class="header__back">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </a>
+    )}
+    <a href="/" class="logo">
+      Statisfy<span>RPG</span>
+    </a>
+  </div>
+  <div class="header__right">
+    <slot />
+  </div>
+</header>
+
+<style>
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--mist);
+    margin-bottom: var(--space-md);
+  }
+  
+  .header__left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  
+  .header__back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    color: var(--ash);
+    transition: var(--transition-fast);
+  }
+  
+  .header__back:hover {
+    background: var(--shadow);
+    color: var(--accent);
+  }
+  
+  .header__right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  
+  .logo {
+    font-family: var(--font-narrative);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  
+  .logo span {
+    color: var(--smoke);
+    font-weight: 300;
+  }
+</style>

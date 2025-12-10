@@ -1,0 +1,71 @@
+---
+// SpheresGrid.astro - Griglia delle sfere magiche
+const spheres = [
+  { id: 'ignis', name: 'Ignis' },
+  { id: 'aqua', name: 'Aqua' },
+  { id: 'terra', name: 'Terra' },
+  { id: 'ventus', name: 'Ventus' },
+  { id: 'mens', name: 'Mens' },
+  { id: 'anima', name: 'Anima' },
+  { id: 'vis', name: 'Vis' },
+  { id: 'vita', name: 'Vita' },
+  { id: 'spatium', name: 'Spatium' },
+  { id: 'tempus', name: 'Tempus' }
+];
+---
+
+<div class="spheres-grid">
+  {spheres.map(sphere => (
+    <div class="sphere-item">
+      <span class={`sphere-dot sphere-dot--${sphere.id}`}></span>
+      <span class="sphere-name">{sphere.name}</span>
+      <span class="sphere-value" id={`sphere-${sphere.id}`}>0</span>
+    </div>
+  ))}
+</div>
+
+<style>
+  .spheres-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+  
+  .sphere-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--shadow);
+    border-radius: 6px;
+    font-size: 0.8rem;
+  }
+  
+  .sphere-name {
+    flex: 1;
+    color: var(--bone);
+  }
+  
+  .sphere-value {
+    font-family: var(--font-mono);
+    color: var(--accent);
+  }
+  
+  .sphere-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  
+  .sphere-dot--ignis { background: var(--ignis); }
+  .sphere-dot--aqua { background: var(--aqua); }
+  .sphere-dot--terra { background: var(--terra); }
+  .sphere-dot--ventus { background: var(--ventus); }
+  .sphere-dot--mens { background: var(--mens); }
+  .sphere-dot--anima { background: var(--anima); }
+  .sphere-dot--vis { background: var(--vis); }
+  .sphere-dot--vita { background: var(--vita); }
+  .sphere-dot--spatium { background: var(--spatium); }
+  .sphere-dot--tempus { background: var(--tempus); }
+</style>

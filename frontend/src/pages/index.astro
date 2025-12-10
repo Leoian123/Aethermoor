@@ -1,0 +1,230 @@
+---
+// index.astro - Dashboard selezione personaggi
+import Layout from '../components/Layout.astro';
+import Header from '../components/ui/Header.astro';
+import CharacterSlot from '../components/dashboard/CharacterSlot.astro';
+import CharacterWizard from '../components/dashboard/CharacterWizard.astro';
+---
+
+<Layout title="STATISFY RPG">
+  <div class="dashboard-container">
+    <Header />
+    
+    <main class="dashboard-main">
+      <div class="dashboard-intro">
+        <h1 class="dashboard-title">Scegli il tuo Personaggio</h1>
+        <p class="dashboard-subtitle">Seleziona uno slot per iniziare la tua avventura ad Aethermoor</p>
+      </div>
+      
+      <div class="character-grid" id="character-grid">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <CharacterSlot slot={i} exists={false} />
+        ))}
+      </div>
+      
+      <div class="backend-status" id="backend-status">
+        <span class="status-dot"></span>
+        <span class="status-text">Connessione al server...</span>
+      </div>
+    </main>
+    
+    <footer class="dashboard-footer">
+      <p>Tutto ha un prezzo.</p>
+    </footer>
+  </div>
+  
+  <!-- Wizard è autosufficiente, espone window.openWizard() -->
+  <CharacterWizard />
+</Layout>
+
+<script>
+  import { getAllSlots, deleteCharacter, checkHealth } from '../lib/api.js';
+  
+  const grid = document.getElementById('character-grid');
+  const statusEl = document.getElementById('backend-status');
+  
+  // ═══════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════
+  
+  async function init() {
+    const online = await checkHealth();
+    
+    if (online) {
+      statusEl?.classList.add('online');
+      statusEl.querySelector('.status-text').textContent = 'Server connesso';
+      await loadSlots();
+    } else {
+      statusEl?.classList.add('offline');
+      statusEl.querySelector('.status-text').textContent = 'Server offline - avvia il backend';
+    }
+  }
+  
+  async function loadSlots() {
+    try {
+      const slots = await getAllSlots();
+      
+      slots.forEach(slotData => {
+        const slotEl = grid?.querySelector(`[data-slot="${slotData.slot}"]`);
+        if (!slotEl) return;
+        
+        if (slotData.exists) {
+          slotEl.dataset.exists = 'true';
+          slotEl.dataset.characterId = slotData.id;
+          
+          const info = slotEl.querySelector('.slot__info');
+          if (info) {
+            info.innerHTML = `
+              <span class="slot__name">${slotData.name}</span>
+              <span class="slot__class">${slotData.class_name} · Lv.${slotData.level}</span>
+            `;
+          }
+          
+          // Aggiungi delete button
+          if (!slotEl.querySelector('.slot__delete')) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'slot__delete';
+            deleteBtn.dataset.characterId = slotData.id;
+            deleteBtn.title = 'Elimina';
+            deleteBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>`;
+            slotEl.appendChild(deleteBtn);
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Errore caricamento slots:', e);
+    }
+  }
+  
+  // ═══════════════════════════════════════
+  // CLICK HANDLERS
+  // ═══════════════════════════════════════
+  
+  grid?.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+    
+    // Delete button
+    const deleteBtn = target.closest('.slot__delete') as HTMLElement;
+    if (deleteBtn) {
+      e.stopPropagation();
+      const charId = deleteBtn.dataset.characterId;
+      
+      if (confirm('Eliminare questo personaggio?')) {
+        try {
+          await deleteCharacter(charId);
+          location.reload();
+        } catch (err) {
+          alert('Errore: ' + err.message);
+        }
+      }
+      return;
+    }
+    
+    // Slot click
+    const slotEl = target.closest('.character-slot') as HTMLElement;
+    if (slotEl) {
+      const slot = parseInt(slotEl.dataset.slot);
+      const exists = slotEl.dataset.exists === 'true';
+      
+      if (exists) {
+        window.location.href = `/game?slot=${slot}`;
+      } else {
+        // Apri wizard (funzione esposta da CharacterWizard.astro)
+        window.openWizard(slot);
+      }
+    }
+  });
+  
+  init();
+</script>
+
+<style>
+  .dashboard-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-md);
+  }
+  
+  .dashboard-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .dashboard-intro {
+    text-align: center;
+    padding: var(--space-xl) 0;
+  }
+  
+  .dashboard-title {
+    font-family: var(--font-narrative);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--parchment);
+    margin-bottom: var(--space-sm);
+  }
+  
+  .dashboard-subtitle {
+    font-size: 1rem;
+    color: var(--ash);
+  }
+  
+  .character-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-lg);
+    padding: var(--space-lg) 0;
+  }
+  
+  @media (min-width: 768px) {
+    .character-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .character-grid {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
+  
+  .backend-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    font-size: 0.8rem;
+    color: var(--smoke);
+  }
+  
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--smoke);
+  }
+  
+  .backend-status.online .status-dot {
+    background: var(--vita);
+  }
+  
+  .backend-status.offline .status-dot {
+    background: var(--tempus);
+  }
+  
+  .dashboard-footer {
+    text-align: center;
+    padding: var(--space-xl) 0;
+    color: var(--smoke);
+    font-family: var(--font-narrative);
+    font-style: italic;
+    border-top: 1px solid var(--mist);
+  }
+</style>

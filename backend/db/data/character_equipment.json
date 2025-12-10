@@ -1,0 +1,38 @@
+[
+  {
+    "id": "ceq_1c1189d2",
+    "character_id": "char_527b0a9f",
+    "equipment_id": "eq_sharp_dagger",
+    "equipped_slot": "main_hand"
+  },
+  {
+    "id": "ceq_23bd92af",
+    "character_id": "char_527b0a9f",
+    "equipment_id": "eq_soft_leather",
+    "equipped_slot": "chest"
+  },
+  {
+    "id": "ceq_9dc22589",
+    "character_id": "char_527b0a9f",
+    "equipment_id": "eq_lockpick_set",
+    "equipped_slot": "belt"
+  },
+  {
+    "id": "ceq_40ab9f57",
+    "character_id": "char_12892bf5",
+    "equipment_id": "eq_ash_staff",
+    "equipped_slot": "two_hand"
+  },
+  {
+    "id": "ceq_73252eec",
+    "character_id": "char_12892bf5",
+    "equipment_id": "eq_cloth_robes",
+    "equipped_slot": "chest"
+  },
+  {
+    "id": "ceq_5c1e357a",
+    "character_id": "char_12892bf5",
+    "equipment_id": "eq_basic_grimoire",
+    "equipped_slot": "off_hand"
+  }
+]

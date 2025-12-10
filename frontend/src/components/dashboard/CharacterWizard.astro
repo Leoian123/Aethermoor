@@ -1,0 +1,767 @@
+---
+// CharacterWizard.astro - Wizard creazione personaggio semplificato
+---
+
+<div class="wizard-overlay" id="wizard-overlay">
+  <div class="wizard-modal">
+    <button class="wizard-close" id="wizard-close">×</button>
+    
+    <!-- Progress -->
+    <div class="wizard-progress">
+      <div class="progress-step active" data-step="1">1</div>
+      <div class="progress-line"></div>
+      <div class="progress-step" data-step="2">2</div>
+      <div class="progress-line"></div>
+      <div class="progress-step" data-step="3">3</div>
+      <div class="progress-line"></div>
+      <div class="progress-step" data-step="4">4</div>
+    </div>
+    
+    <!-- Step 1: Nome -->
+    <div class="wizard-step active" data-step="1">
+      <h2 class="wizard-title">Come ti chiami?</h2>
+      <p class="wizard-subtitle">Il tuo nome risuonerà nelle leggende</p>
+      
+      <input type="text" class="wizard-input" id="input-name" placeholder="Nome" maxlength="15" />
+      <p class="wizard-hint">3-15 caratteri</p>
+      <p class="wizard-error" id="error-name"></p>
+    </div>
+    
+    <!-- Step 2: Classe -->
+    <div class="wizard-step" data-step="2">
+      <h2 class="wizard-title">Scegli la tua vocazione</h2>
+      <p class="wizard-subtitle">Passa il mouse per i dettagli</p>
+      
+      <div class="class-grid" id="class-grid">
+        <!-- Classi con ID corretti dal database -->
+        <div class="class-card" data-class-id="cls_warrior" data-class-name="Guerriero" data-class-desc="Maestro delle armi e del combattimento corpo a corpo. Alta resistenza fisica.">
+          <div class="class-icon">⚔️</div>
+          <div class="class-name">Guerriero</div>
+        </div>
+        <div class="class-card" data-class-id="cls_mage" data-class-name="Mago" data-class-desc="Canalizzatore delle sfere arcane. Alto potere magico ma fragile.">
+          <div class="class-icon">🔮</div>
+          <div class="class-name">Mago</div>
+        </div>
+        <div class="class-card" data-class-id="cls_rogue" data-class-name="Ladro" data-class-desc="Ombra silenziosa. Specialista in furtività e colpi critici.">
+          <div class="class-icon">🗡️</div>
+          <div class="class-name">Ladro</div>
+        </div>
+        <div class="class-card" data-class-id="cls_cleric" data-class-name="Chierico" data-class-desc="Servitore del divino. Bilanciato tra cura e combattimento.">
+          <div class="class-icon">✨</div>
+          <div class="class-name">Chierico</div>
+        </div>
+      </div>
+      
+      <!-- Tooltip -->
+      <div class="class-tooltip" id="class-tooltip">
+        <span id="tooltip-text"></span>
+      </div>
+      
+      <p class="wizard-error" id="error-class"></p>
+    </div>
+    
+    <!-- Step 3: Stats -->
+    <div class="wizard-step" data-step="3">
+      <h2 class="wizard-title">Distribuisci i punti</h2>
+      <p class="wizard-subtitle">20 punti da assegnare</p>
+      
+      <div class="stats-container">
+        <div class="stat-row">
+          <span class="stat-name">💪 Forza</span>
+          <div class="stat-controls">
+            <button class="stat-btn" data-stat="str" data-action="minus">−</button>
+            <span class="stat-value" id="val-str">10</span>
+            <button class="stat-btn" data-stat="str" data-action="plus">+</button>
+          </div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-name">⚡ Destrezza</span>
+          <div class="stat-controls">
+            <button class="stat-btn" data-stat="dex" data-action="minus">−</button>
+            <span class="stat-value" id="val-dex">10</span>
+            <button class="stat-btn" data-stat="dex" data-action="plus">+</button>
+          </div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-name">❤️ Vitalità</span>
+          <div class="stat-controls">
+            <button class="stat-btn" data-stat="vit" data-action="minus">−</button>
+            <span class="stat-value" id="val-vit">10</span>
+            <button class="stat-btn" data-stat="vit" data-action="plus">+</button>
+          </div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-name">🧠 Intelligenza</span>
+          <div class="stat-controls">
+            <button class="stat-btn" data-stat="int" data-action="minus">−</button>
+            <span class="stat-value" id="val-int">10</span>
+            <button class="stat-btn" data-stat="int" data-action="plus">+</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="points-box">
+        Punti: <span id="points-left">20</span>
+      </div>
+    </div>
+    
+    <!-- Step 4: Conferma -->
+    <div class="wizard-step" data-step="4">
+      <h2 class="wizard-title">Conferma</h2>
+      <p class="wizard-subtitle">Rivedi il tuo personaggio</p>
+      
+      <div class="summary">
+        <div class="summary-row">
+          <span>Nome</span>
+          <span id="sum-name">—</span>
+        </div>
+        <div class="summary-row">
+          <span>Classe</span>
+          <span id="sum-class">—</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-stats">
+          <div><span class="label">STR</span><span id="sum-str">10</span></div>
+          <div><span class="label">DEX</span><span id="sum-dex">10</span></div>
+          <div><span class="label">VIT</span><span id="sum-vit">10</span></div>
+          <div><span class="label">INT</span><span id="sum-int">10</span></div>
+        </div>
+      </div>
+      
+      <p class="wizard-error" id="error-submit"></p>
+    </div>
+    
+    <!-- Nav -->
+    <div class="wizard-nav">
+      <button class="btn-back" id="btn-back">Indietro</button>
+      <button class="btn-next" id="btn-next">Avanti</button>
+      <button class="btn-confirm" id="btn-confirm">Crea Personaggio</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { createCharacter } from '../../lib/api.js';
+  
+  // State
+  let step = 1;
+  let slot = 0;
+  let stats = { str: 10, dex: 10, vit: 10, int: 10 };
+  let points = 20;
+  let selectedClass = { id: null, name: '' };
+  let charName = '';
+  
+  // DOM
+  const overlay = document.getElementById('wizard-overlay');
+  const tooltip = document.getElementById('class-tooltip');
+  const tooltipText = document.getElementById('tooltip-text');
+  
+  // ══════════════════════════════════════════════════════
+  // OPEN / CLOSE
+  // ══════════════════════════════════════════════════════
+  
+  window.openWizard = function(targetSlot) {
+    slot = targetSlot;
+    resetWizard();
+    overlay.classList.add('active');
+    document.getElementById('input-name').focus();
+  };
+  
+  window.closeWizard = function() {
+    overlay.classList.remove('active');
+  };
+  
+  document.getElementById('wizard-close').addEventListener('click', window.closeWizard);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) window.closeWizard();
+  });
+  
+  // ══════════════════════════════════════════════════════
+  // CLASS SELECTION + TOOLTIP
+  // ══════════════════════════════════════════════════════
+  
+  document.querySelectorAll('.class-card').forEach(card => {
+    // Click = select
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedClass.id = card.dataset.classId;  // stringa, non numero
+      selectedClass.name = card.dataset.className;
+      clearError('error-class');
+    });
+    
+    // Hover = tooltip
+    card.addEventListener('mouseenter', (e) => {
+      tooltipText.textContent = card.dataset.classDesc;
+      tooltip.classList.add('visible');
+      positionTooltip(e);
+    });
+    
+    card.addEventListener('mousemove', positionTooltip);
+    
+    card.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('visible');
+    });
+  });
+  
+  function positionTooltip(e) {
+    let x = e.clientX + 15;
+    let y = e.clientY + 15;
+    
+    // Keep in viewport
+    if (x + 200 > window.innerWidth) x = e.clientX - 210;
+    if (y + 60 > window.innerHeight) y = e.clientY - 70;
+    
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+  }
+  
+  // ══════════════════════════════════════════════════════
+  // STATS
+  // ══════════════════════════════════════════════════════
+  
+  document.querySelectorAll('.stat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const stat = btn.dataset.stat;
+      const action = btn.dataset.action;
+      
+      if (action === 'plus' && points > 0) {
+        stats[stat]++;
+        points--;
+      } else if (action === 'minus' && stats[stat] > 5) {
+        stats[stat]--;
+        points++;
+      }
+      
+      updateStatsDisplay();
+    });
+  });
+  
+  function updateStatsDisplay() {
+    document.getElementById('val-str').textContent = stats.str;
+    document.getElementById('val-dex').textContent = stats.dex;
+    document.getElementById('val-vit').textContent = stats.vit;
+    document.getElementById('val-int').textContent = stats.int;
+    document.getElementById('points-left').textContent = points;
+  }
+  
+  // ══════════════════════════════════════════════════════
+  // NAVIGATION
+  // ══════════════════════════════════════════════════════
+  
+  document.getElementById('btn-back').addEventListener('click', () => {
+    if (step > 1) goToStep(step - 1);
+  });
+  
+  document.getElementById('btn-next').addEventListener('click', () => {
+    if (validateStep()) goToStep(step + 1);
+  });
+  
+  document.getElementById('btn-confirm').addEventListener('click', submitCharacter);
+  
+  function goToStep(newStep) {
+    step = newStep;
+    
+    // Update step visibility
+    document.querySelectorAll('.wizard-step').forEach(el => {
+      el.classList.toggle('active', parseInt(el.dataset.step) === step);
+    });
+    
+    // Update progress
+    document.querySelectorAll('.progress-step').forEach(el => {
+      const s = parseInt(el.dataset.step);
+      el.classList.remove('active', 'done');
+      if (s === step) el.classList.add('active');
+      else if (s < step) el.classList.add('done');
+    });
+    
+    // Update buttons
+    document.getElementById('btn-back').style.display = step > 1 ? 'block' : 'none';
+    document.getElementById('btn-next').style.display = step < 4 ? 'block' : 'none';
+    document.getElementById('btn-confirm').style.display = step === 4 ? 'block' : 'none';
+    
+    // Populate summary on step 4
+    if (step === 4) populateSummary();
+  }
+  
+  function validateStep() {
+    if (step === 1) {
+      charName = document.getElementById('input-name').value.trim();
+      if (charName.length < 3) {
+        showError('error-name', 'Minimo 3 caratteri');
+        return false;
+      }
+      if (!/^[a-zA-Z0-9]+$/.test(charName)) {
+        showError('error-name', 'Solo lettere e numeri');
+        return false;
+      }
+      return true;
+    }
+    
+    if (step === 2) {
+      if (!selectedClass.id) {
+        showError('error-class', 'Seleziona una classe');
+        return false;
+      }
+      return true;
+    }
+    
+    return true;
+  }
+  
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  
+  function clearError(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+  }
+  
+  // ══════════════════════════════════════════════════════
+  // SUMMARY
+  // ══════════════════════════════════════════════════════
+  
+  function populateSummary() {
+    document.getElementById('sum-name').textContent = charName;
+    document.getElementById('sum-class').textContent = selectedClass.name;
+    document.getElementById('sum-str').textContent = stats.str;
+    document.getElementById('sum-dex').textContent = stats.dex;
+    document.getElementById('sum-vit').textContent = stats.vit;
+    document.getElementById('sum-int').textContent = stats.int;
+  }
+  
+  // ══════════════════════════════════════════════════════
+  // SUBMIT
+  // ══════════════════════════════════════════════════════
+  
+  async function submitCharacter() {
+    const btn = document.getElementById('btn-confirm');
+    btn.disabled = true;
+    btn.textContent = 'Creazione...';
+    
+    try {
+      const result = await createCharacter({
+        slot: slot,
+        name: charName,
+        class_id: selectedClass.id,
+        str: stats.str,
+        dex: stats.dex,
+        vit: stats.vit,
+        int: stats.int
+      });
+      
+      if (result.error) {
+        showError('error-submit', result.error);
+        btn.disabled = false;
+        btn.textContent = 'Crea Personaggio';
+        return;
+      }
+      
+      // Success!
+      window.location.href = `/game?slot=${slot}`;
+      
+    } catch (e) {
+      console.error('Errore:', e);
+      showError('error-submit', 'Errore di connessione');
+      btn.disabled = false;
+      btn.textContent = 'Crea Personaggio';
+    }
+  }
+  
+  // ══════════════════════════════════════════════════════
+  // RESET
+  // ══════════════════════════════════════════════════════
+  
+  function resetWizard() {
+    step = 1;
+    stats = { str: 10, dex: 10, vit: 10, int: 10 };
+    points = 20;
+    selectedClass = { id: null, name: '' };
+    charName = '';
+    
+    document.getElementById('input-name').value = '';
+    document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.wizard-error').forEach(e => {
+      e.textContent = '';
+      e.style.display = 'none';
+    });
+    
+    updateStatsDisplay();
+    goToStep(1);
+    
+    const btn = document.getElementById('btn-confirm');
+    btn.disabled = false;
+    btn.textContent = 'Crea Personaggio';
+  }
+</script>
+
+<style>
+  .wizard-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+  
+  .wizard-overlay.active {
+    display: flex;
+  }
+  
+  .wizard-modal {
+    position: relative;
+    background: var(--abyss);
+    border: 1px solid var(--mist);
+    border-radius: 16px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .wizard-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 1px solid var(--mist);
+    border-radius: 6px;
+    color: var(--ash);
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  
+  .wizard-close:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  /* Progress */
+  .wizard-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  
+  .progress-step {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--shadow);
+    border: 2px solid var(--mist);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: var(--smoke);
+  }
+  
+  .progress-step.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--void);
+  }
+  
+  .progress-step.done {
+    background: var(--vita);
+    border-color: var(--vita);
+    color: var(--void);
+  }
+  
+  .progress-line {
+    width: 30px;
+    height: 2px;
+    background: var(--mist);
+  }
+  
+  /* Steps */
+  .wizard-step {
+    display: none;
+    text-align: center;
+  }
+  
+  .wizard-step.active {
+    display: block;
+    animation: fadeIn 0.2s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .wizard-title {
+    font-family: var(--font-narrative);
+    font-size: 1.4rem;
+    color: var(--parchment);
+    margin: 0 0 0.25rem;
+  }
+  
+  .wizard-subtitle {
+    color: var(--ash);
+    font-size: 0.85rem;
+    margin: 0 0 1.5rem;
+  }
+  
+  .wizard-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--shadow);
+    border: 1px solid var(--mist);
+    border-radius: 8px;
+    color: var(--parchment);
+    font-size: 1rem;
+    text-align: center;
+  }
+  
+  .wizard-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  
+  .wizard-hint {
+    font-size: 0.75rem;
+    color: var(--smoke);
+    margin-top: 0.5rem;
+  }
+  
+  .wizard-error {
+    font-size: 0.8rem;
+    color: #e74c3c;
+    margin-top: 0.5rem;
+    display: none;
+  }
+  
+  /* Class Grid */
+  .class-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .class-card {
+    background: var(--shadow);
+    border: 2px solid var(--mist);
+    border-radius: 12px;
+    padding: 1.25rem 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .class-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  
+  .class-card.selected {
+    border-color: var(--accent);
+    background: rgba(201, 169, 89, 0.15);
+    box-shadow: 0 0 15px rgba(201, 169, 89, 0.3);
+  }
+  
+  .class-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .class-name {
+    font-family: var(--font-narrative);
+    font-size: 1rem;
+    color: var(--parchment);
+  }
+  
+  /* Tooltip */
+  .class-tooltip {
+    position: fixed;
+    background: var(--void);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    max-width: 200px;
+    font-size: 0.8rem;
+    color: var(--bone);
+    z-index: 300;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+  }
+  
+  .class-tooltip.visible {
+    opacity: 1;
+  }
+  
+  /* Stats */
+  .stats-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: var(--shadow);
+    border-radius: 8px;
+  }
+  
+  .stat-name {
+    font-size: 0.95rem;
+    color: var(--parchment);
+  }
+  
+  .stat-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .stat-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--mist);
+    background: var(--abyss);
+    color: var(--bone);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  
+  .stat-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.2rem;
+    color: var(--accent);
+    min-width: 30px;
+    text-align: center;
+  }
+  
+  .points-box {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: var(--shadow);
+    border-radius: 8px;
+    text-align: center;
+    color: var(--bone);
+  }
+  
+  .points-box span {
+    font-family: var(--font-mono);
+    font-size: 1.3rem;
+    color: var(--accent);
+  }
+  
+  /* Summary */
+  .summary {
+    background: var(--shadow);
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: left;
+  }
+  
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    color: var(--bone);
+  }
+  
+  .summary-row span:first-child {
+    color: var(--ash);
+  }
+  
+  .summary-divider {
+    height: 1px;
+    background: var(--mist);
+    margin: 0.5rem 0;
+  }
+  
+  .summary-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    text-align: center;
+    padding-top: 0.5rem;
+  }
+  
+  .summary-stats .label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--smoke);
+    text-transform: uppercase;
+  }
+  
+  .summary-stats span:not(.label) {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--accent);
+  }
+  
+  /* Navigation */
+  .wizard-nav {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .btn-back, .btn-next, .btn-confirm {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .btn-back {
+    background: transparent;
+    border: 1px solid var(--mist);
+    color: var(--ash);
+    display: none;
+  }
+  
+  .btn-back:hover {
+    border-color: var(--bone);
+    color: var(--bone);
+  }
+  
+  .btn-next, .btn-confirm {
+    background: var(--accent);
+    border: none;
+    color: var(--void);
+    font-weight: 500;
+  }
+  
+  .btn-next:hover, .btn-confirm:hover {
+    background: var(--parchment);
+  }
+  
+  .btn-next:disabled, .btn-confirm:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .btn-confirm {
+    display: none;
+  }
+</style>

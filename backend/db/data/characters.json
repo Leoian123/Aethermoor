@@ -1,0 +1,138 @@
+[
+  {
+    "id": "char_527b0a9f",
+    "slot": 0,
+    "name": "Eric",
+    "class_id": "cls_rogue",
+    "level": 1,
+    "xp": 0,
+    "hp_current": 200,
+    "hp_max": 200,
+    "mana_current": 130,
+    "mana_max": 130,
+    "str": 10,
+    "dex": 25,
+    "vit": 10,
+    "int": 15,
+    "created_at": "2025-12-10T15:57:32.924711",
+    "updated_at": "2025-12-10T15:57:32.924711",
+    "class": {
+      "id": "cls_rogue",
+      "name": "Ladro",
+      "description": "Specialista della furtività e degli attacchi precisi. Maestro di colpi critici, evasione e abilità utilitarie.",
+      "starting_ability_tag": "MARTIAL_DAGGER_SNEAK_ATTACK",
+      "starting_equipment_ids": [
+        "eq_sharp_dagger",
+        "eq_soft_leather",
+        "eq_lockpick_set"
+      ],
+      "hp_base": 80,
+      "hp_per_vit": 12,
+      "mana_base": 40,
+      "mana_per_int": 6
+    },
+    "skills": [
+      {
+        "id": "sk_dagger_sneak_attack",
+        "parent_id": "sk_dagger",
+        "category": "martial",
+        "type": "active",
+        "tag": "MARTIAL_DAGGER_SNEAK_ATTACK",
+        "name": "Colpo Furtivo",
+        "description": "Un attacco letale dalla copertura delle ombre.",
+        "base_cost": 10,
+        "cooldown": 2,
+        "effects": {
+          "damage_mult": 2.0,
+          "requires_stealth": true
+        },
+        "requirements": {
+          "MARTIAL_DAGGER": 1
+        },
+        "mastery": 1,
+        "unlocked_at": "2025-12-10T15:57:32.926712"
+      },
+      {
+        "id": "sk_dagger",
+        "parent_id": null,
+        "category": "martial",
+        "type": "passive",
+        "tag": "MARTIAL_DAGGER",
+        "name": "Pugnale",
+        "description": "Maestria nell'uso di lame corte e tecniche furtive.",
+        "base_cost": 0,
+        "cooldown": null,
+        "effects": {
+          "crit_chance": "+2% per mastery"
+        },
+        "requirements": null,
+        "mastery": 1,
+        "unlocked_at": "2025-12-10T15:57:32.927711"
+      }
+    ],
+    "equipment": [
+      {
+        "id": "eq_sharp_dagger",
+        "name": "Daga Affilata",
+        "type": "weapon",
+        "slot": "main_hand",
+        "description": "Una lama corta perfetta per colpi precisi.",
+        "stats_bonus": {
+          "damage": 10,
+          "crit_chance": 8
+        },
+        "requirements": {
+          "dex": 12
+        },
+        "equipped_slot": "main_hand"
+      },
+      {
+        "id": "eq_soft_leather",
+        "name": "Armatura di Cuoio Morbido",
+        "type": "armor",
+        "slot": "chest",
+        "description": "Cuoio flessibile che non produce rumore.",
+        "stats_bonus": {
+          "armor": 10,
+          "stealth": 10
+        },
+        "requirements": {},
+        "equipped_slot": "chest"
+      },
+      {
+        "id": "eq_lockpick_set",
+        "name": "Kit da Scasso",
+        "type": "accessory",
+        "slot": "belt",
+        "description": "Strumenti per aprire serrature e disattivare trappole.",
+        "stats_bonus": {
+          "lockpicking": 20,
+          "trap_disarm": 15
+        },
+        "requirements": {
+          "dex": 10
+        },
+        "equipped_slot": "belt"
+      }
+    ],
+    "inventory": []
+  },
+  {
+    "id": "char_12892bf5",
+    "slot": 1,
+    "name": "Corax",
+    "class_id": "cls_mage",
+    "level": 1,
+    "xp": 0,
+    "hp_current": 160,
+    "hp_max": 160,
+    "mana_current": 440,
+    "mana_max": 440,
+    "str": 10,
+    "dex": 10,
+    "vit": 10,
+    "int": 30,
+    "created_at": "2025-12-10T16:00:07.560689",
+    "updated_at": "2025-12-10T16:00:07.560689"
+  }
+]

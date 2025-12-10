@@ -1,0 +1,46 @@
+[
+  {
+    "id": "cls_warrior",
+    "name": "Guerriero",
+    "description": "Maestro del combattimento fisico e delle armi. Eccelle nel danno corpo a corpo, resistenza e protezione degli alleati.",
+    "starting_ability_tag": "MARTIAL_SWORD_POWER_ATTACK",
+    "starting_equipment_ids": ["eq_iron_sword", "eq_leather_armor", "eq_wooden_shield"],
+    "hp_base": 100,
+    "hp_per_vit": 15,
+    "mana_base": 30,
+    "mana_per_int": 5
+  },
+  {
+    "id": "cls_mage",
+    "name": "Mago",
+    "description": "Manipolatore delle forze arcane e degli elementi. Specializzato in danno magico a distanza e controllo del campo di battaglia.",
+    "starting_ability_tag": "SPHERE_VIS_MAGIC_DART",
+    "starting_equipment_ids": ["eq_ash_staff", "eq_cloth_robes", "eq_basic_grimoire"],
+    "hp_base": 60,
+    "hp_per_vit": 10,
+    "mana_base": 80,
+    "mana_per_int": 12
+  },
+  {
+    "id": "cls_rogue",
+    "name": "Ladro",
+    "description": "Specialista della furtività e degli attacchi precisi. Maestro di colpi critici, evasione e abilità utilitarie.",
+    "starting_ability_tag": "MARTIAL_DAGGER_SNEAK_ATTACK",
+    "starting_equipment_ids": ["eq_sharp_dagger", "eq_soft_leather", "eq_lockpick_set"],
+    "hp_base": 80,
+    "hp_per_vit": 12,
+    "mana_base": 40,
+    "mana_per_int": 6
+  },
+  {
+    "id": "cls_cleric",
+    "name": "Chierico",
+    "description": "Servitore delle divinità con poteri di guarigione. Focus su supporto di gruppo, cure e benedizioni.",
+    "starting_ability_tag": "SPHERE_VITA_MINOR_HEAL",
+    "starting_equipment_ids": ["eq_blessed_mace", "eq_sacred_robes", "eq_holy_symbol"],
+    "hp_base": 85,
+    "hp_per_vit": 13,
+    "mana_base": 60,
+    "mana_per_int": 10
+  }
+]

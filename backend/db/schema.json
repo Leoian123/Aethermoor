@@ -1,0 +1,101 @@
+{
+  "_comment": "Schema reference per mock DB PostgreSQL-like",
+  "tables": {
+    "characters": {
+      "columns": {
+        "id": "UUID PRIMARY KEY",
+        "slot": "INTEGER NOT NULL (0-5)",
+        "name": "VARCHAR(15) UNIQUE NOT NULL",
+        "class_id": "UUID REFERENCES classes(id)",
+        "level": "INTEGER DEFAULT 1",
+        "xp": "INTEGER DEFAULT 0",
+        "hp_current": "INTEGER",
+        "hp_max": "INTEGER",
+        "mana_current": "INTEGER",
+        "mana_max": "INTEGER",
+        "str": "INTEGER DEFAULT 10",
+        "dex": "INTEGER DEFAULT 10",
+        "vit": "INTEGER DEFAULT 10",
+        "int": "INTEGER DEFAULT 10",
+        "created_at": "TIMESTAMP",
+        "updated_at": "TIMESTAMP"
+      }
+    },
+    "classes": {
+      "columns": {
+        "id": "UUID PRIMARY KEY",
+        "name": "VARCHAR(50) UNIQUE NOT NULL",
+        "description": "TEXT",
+        "starting_ability_tag": "VARCHAR(100)",
+        "starting_equipment_ids": "UUID[]",
+        "hp_base": "INTEGER",
+        "hp_per_vit": "INTEGER",
+        "mana_base": "INTEGER",
+        "mana_per_int": "INTEGER"
+      }
+    },
+    "skills": {
+      "columns": {
+        "id": "UUID PRIMARY KEY",
+        "parent_id": "UUID REFERENCES skills(id) NULL",
+        "category": "ENUM('sphere', 'martial', 'knowledge')",
+        "type": "ENUM('passive', 'active')",
+        "tag": "VARCHAR(100) UNIQUE NOT NULL",
+        "name": "VARCHAR(100) NOT NULL",
+        "description": "TEXT",
+        "base_cost": "INTEGER DEFAULT 0",
+        "cooldown": "INTEGER NULL",
+        "effects": "JSONB",
+        "requirements": "JSONB"
+      }
+    },
+    "character_skills": {
+      "columns": {
+        "id": "UUID PRIMARY KEY",
+        "character_id": "UUID REFERENCES characters(id) ON DELETE CASCADE",
+        "skill_id": "UUID REFERENCES skills(id)",
+        "mastery": "INTEGER DEFAULT 1 CHECK(mastery >= 1 AND mastery <= 10)",
+        "unlocked_at": "TIMESTAMP"
+      },
+      "constraints": ["UNIQUE(character_id, skill_id)"]
+    },
+    "equipment": {
+      "columns": {
+        "id": "UUID PRIMARY KEY",
+        "name": "VARCHAR(100) NOT NULL",
+        "type": "ENUM('weapon', 'armor', 'accessory')",
+        "slot": "VARCHAR(50)",
+        "stats_bonus": "JSONB",
+        "requirements": "JSONB",
+        "description": "TEXT"
+      }
+    },
+    "character_equipment": {
+      "columns": {
+        "id": "UUID PRIMARY KEY",
+        "character_id": "UUID REFERENCES characters(id) ON DELETE CASCADE",
+        "equipment_id": "UUID REFERENCES equipment(id)",
+        "equipped_slot": "VARCHAR(50)"
+      },
+      "constraints": ["UNIQUE(character_id, equipped_slot)"]
+    },
+    "inventory": {
+      "columns": {
+        "id": "UUID PRIMARY KEY",
+        "character_id": "UUID REFERENCES characters(id) ON DELETE CASCADE",
+        "item_name": "VARCHAR(100)",
+        "quantity": "INTEGER DEFAULT 1",
+        "metadata": "JSONB"
+      }
+    },
+    "chat_history": {
+      "columns": {
+        "id": "UUID PRIMARY KEY",
+        "character_id": "UUID REFERENCES characters(id) ON DELETE CASCADE",
+        "role": "ENUM('user', 'assistant')",
+        "content": "TEXT",
+        "created_at": "TIMESTAMP"
+      }
+    }
+  }
+}

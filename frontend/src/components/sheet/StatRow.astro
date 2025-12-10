@@ -1,0 +1,46 @@
+---
+// StatRow.astro - Singola riga statistica
+export interface Props {
+  label: string;
+  value?: string;
+  id?: string;
+  empty?: boolean;
+}
+
+const { label, value = '—', id, empty = false } = Astro.props;
+---
+
+<div class="stat-row">
+  <span class={`stat-name ${empty ? 'stat-name--empty' : ''}`}>{label}</span>
+  {!empty && <span class="stat-value" id={id}>{value}</span>}
+</div>
+
+<style>
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--shadow);
+  }
+  
+  .stat-row:last-child {
+    border-bottom: none;
+  }
+  
+  .stat-name {
+    font-size: 0.9rem;
+    color: var(--bone);
+  }
+  
+  .stat-name--empty {
+    color: var(--smoke);
+    font-style: italic;
+  }
+  
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--accent);
+  }
+</style>
