@@ -1,0 +1,14 @@
+# LLM Interface Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core dependencies
+anthropic>=0.40.0    # For Claude
+openai>=1.50.0       # For OpenAI, Grok, and OpenAI-compatible APIs
+
+# Optional: For async HTTP if not using openai library
+httpx>=0.27.0
+
+# Development dependencies (optional)
+# pytest>=8.0.0
+# pytest-asyncio>=0.24.0
+# ruff>=0.8.0
