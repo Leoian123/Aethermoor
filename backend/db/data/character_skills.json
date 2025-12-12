@@ -1,30 +1,16 @@
 [
   {
-    "id": "csk_379d16ac",
-    "character_id": "char_527b0a9f",
+    "id": "csk_32ca3cbb",
+    "character_id": "char_ec5e91b0",
     "skill_id": "sk_dagger_sneak_attack",
     "mastery": 1,
-    "unlocked_at": "2025-12-10T15:57:32.926712"
+    "unlocked_at": "2025-12-12T13:32:02.878758"
   },
   {
-    "id": "csk_a2c5f9c6",
-    "character_id": "char_527b0a9f",
+    "id": "csk_6531885b",
+    "character_id": "char_ec5e91b0",
     "skill_id": "sk_dagger",
     "mastery": 1,
-    "unlocked_at": "2025-12-10T15:57:32.927711"
-  },
-  {
-    "id": "csk_4b693a52",
-    "character_id": "char_12892bf5",
-    "skill_id": "sk_vis_magic_dart",
-    "mastery": 1,
-    "unlocked_at": "2025-12-10T16:00:07.563193"
-  },
-  {
-    "id": "csk_ef56d313",
-    "character_id": "char_12892bf5",
-    "skill_id": "sk_vis",
-    "mastery": 1,
-    "unlocked_at": "2025-12-10T16:00:07.563193"
+    "unlocked_at": "2025-12-12T13:32:02.879743"
   }
 ]

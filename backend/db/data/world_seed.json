@@ -1,0 +1,242 @@
+{
+  "meta": {
+    "version": "1.0",
+    "world_name": "Aethermoor",
+    "default_spawn": "albachiara.piazza"
+  },
+  
+  "regions": {
+    "valeria": {
+      "id": "valeria",
+      "name": "Regno di Valeria",
+      "description": "Un regno prospero noto per le sue valli fertili e la magia arcana. Governato dalla dinastia Solaris da oltre mille anni.",
+      "hex": [0, 0],
+      "type": "kingdom",
+      "tags": ["civilized", "magic", "fertile"],
+      "borders": {
+        "qadesh": {
+          "via": "passo_aquila",
+          "description": "Il Passo dell'Aquila, unico valico oltre le Montagne dell'Orso"
+        }
+      },
+      "capital": "lumengarde.citta"
+    }
+  },
+  
+  "zones": {
+    "lumengarde": {
+      "id": "lumengarde",
+      "region_id": "valeria",
+      "name": "Valle di Lumengarde",
+      "description": "La valle centrale di Valeria, dove sorge la capitale e numerosi villaggi prosperosi. Le colline sono punteggiate di vigneti e campi di grano.",
+      "hex": [2, 1],
+      "type": "valley",
+      "tags": ["fertile", "populated", "safe"],
+      "locations": ["albachiara", "lumengarde.citta", "lumengarde.crocevia"]
+    }
+  },
+  
+  "locations": {
+    "albachiara": {
+      "id": "albachiara",
+      "zone_id": "lumengarde",
+      "name": "Albachiara",
+      "description": "Un piccolo villaggio ai margini della Valle di Lumengarde, primo punto di accoglienza per i viaggiatori che giungono dalle terre esterne. Case di pietra bianca riflettono la luce del sole, dando al villaggio il suo nome.",
+      "hex": [1, 0],
+      "type": "village",
+      "tags": ["peaceful", "welcoming", "starter"],
+      "sublocations": [
+        "albachiara.piazza",
+        "albachiara.locanda_orso",
+        "albachiara.casa_elena",
+        "albachiara.fabbro",
+        "albachiara.tempio"
+      ],
+      "npc_pool": [
+        "elena_saggia",
+        "oste_bruno",
+        "marta_fabbra",
+        "padre_aldric",
+        "guardia_tomas"
+      ]
+    }
+  },
+  
+  "sublocations": {
+    "albachiara.piazza": {
+      "id": "albachiara.piazza",
+      "parent_id": "albachiara",
+      "name": "Piazza del Sole",
+      "description": "La piazza centrale di Albachiara, con una fontana di pietra al centro e panchine all'ombra di un grande tiglio secolare.",
+      "type": "outdoor",
+      "tags": ["public", "social", "central"],
+      "exits": {
+        "albachiara.locanda_orso": "porta della locanda a nord",
+        "albachiara.casa_elena": "sentiero verso la collina a est",
+        "albachiara.fabbro": "bottega del fabbro a ovest",
+        "albachiara.tempio": "scalinata del tempio a sud"
+      },
+      "npcs_here": ["guardia_tomas"]
+    },
+    
+    "albachiara.locanda_orso": {
+      "id": "albachiara.locanda_orso",
+      "parent_id": "albachiara",
+      "name": "Locanda dell'Orso Danzante",
+      "description": "Una locanda accogliente con travi di legno scuro e un grande camino. L'insegna mostra un orso che balla goffamente.",
+      "type": "indoor",
+      "tags": ["tavern", "social", "rest"],
+      "exits": {
+        "albachiara.piazza": "porta verso la piazza",
+        "albachiara.locanda_orso.cantina": "scala verso la cantina",
+        "albachiara.locanda_orso.stanze": "scale verso le stanze"
+      },
+      "npcs_here": ["oste_bruno"],
+      "children": [
+        "albachiara.locanda_orso.cantina",
+        "albachiara.locanda_orso.stanze"
+      ]
+    },
+    
+    "albachiara.locanda_orso.cantina": {
+      "id": "albachiara.locanda_orso.cantina",
+      "parent_id": "albachiara.locanda_orso",
+      "name": "Cantina della Locanda",
+      "description": "Una cantina buia e fresca, piena di botti di vino e provviste. L'aria odora di muffa e fermentazione.",
+      "type": "indoor",
+      "tags": ["storage", "dark", "secret_potential"],
+      "exits": {
+        "albachiara.locanda_orso": "scale verso la sala comune"
+      },
+      "npcs_here": []
+    },
+    
+    "albachiara.locanda_orso.stanze": {
+      "id": "albachiara.locanda_orso.stanze",
+      "parent_id": "albachiara.locanda_orso",
+      "name": "Corridoio delle Stanze",
+      "description": "Un corridoio stretto con tre porte numerate. Il legno del pavimento scricchiola ad ogni passo.",
+      "type": "indoor",
+      "tags": ["private", "rest"],
+      "exits": {
+        "albachiara.locanda_orso": "scale verso la sala comune"
+      },
+      "npcs_here": []
+    },
+    
+    "albachiara.casa_elena": {
+      "id": "albachiara.casa_elena",
+      "parent_id": "albachiara",
+      "name": "Casa di Elena la Saggia",
+      "description": "Una casetta sulla collina, circondata da un giardino di erbe medicinali. Fumi colorati escono dal camino.",
+      "type": "indoor",
+      "tags": ["magic", "sanctuary", "knowledge"],
+      "exits": {
+        "albachiara.piazza": "sentiero verso la piazza"
+      },
+      "npcs_here": ["elena_saggia"]
+    },
+    
+    "albachiara.fabbro": {
+      "id": "albachiara.fabbro",
+      "parent_id": "albachiara",
+      "name": "Fucina di Marta",
+      "description": "Una bottega con la forgia sempre accesa. Attrezzi agricoli e armi semplici sono esposti fuori.",
+      "type": "indoor",
+      "tags": ["craft", "commerce", "weapons"],
+      "exits": {
+        "albachiara.piazza": "verso la piazza"
+      },
+      "npcs_here": ["marta_fabbra"]
+    },
+    
+    "albachiara.tempio": {
+      "id": "albachiara.tempio",
+      "parent_id": "albachiara",
+      "name": "Tempio della Luce",
+      "description": "Un piccolo tempio di pietra bianca dedicato alle divinità della luce. Vetrate colorate filtrano i raggi del sole.",
+      "type": "indoor",
+      "tags": ["sacred", "healing", "sanctuary"],
+      "exits": {
+        "albachiara.piazza": "scalinata verso la piazza"
+      },
+      "npcs_here": ["padre_aldric"]
+    }
+  },
+  
+  "npcs": {
+    "elena_saggia": {
+      "id": "elena_saggia",
+      "name": "Elena la Saggia",
+      "title": "Custode del Sapere",
+      "description": "Una donna anziana con lunghi capelli argentati e occhi viola che sembrano vedere oltre il visibile. Veste abiti semplici ma decorati con simboli arcani.",
+      "home": "albachiara.casa_elena",
+      "role": "mentor",
+      "disposition_default": "friendly",
+      "knowledge": ["magic", "history", "prophecy"],
+      "dialogue_hooks": [
+        "Accoglie i nuovi arrivati spiegando le basi del mondo",
+        "Può insegnare le prime nozioni sulle Sfere",
+        "Conosce segreti sulla vera natura dei Progenitori"
+      ],
+      "quests": ["intro_spheres", "lost_tome"]
+    },
+    
+    "oste_bruno": {
+      "id": "oste_bruno",
+      "name": "Bruno",
+      "title": "Oste dell'Orso Danzante",
+      "description": "Un uomo robusto con una barba folta e un grembiule sempre sporco di farina. Ride facilmente e ascolta i pettegolezzi.",
+      "home": "albachiara.locanda_orso",
+      "role": "innkeeper",
+      "disposition_default": "neutral",
+      "knowledge": ["rumors", "travelers", "local_news"],
+      "dialogue_hooks": [
+        "Sa sempre chi è passato di recente",
+        "Può offrire un letto per la notte",
+        "Conosce i segreti di molti avventori"
+      ],
+      "services": ["rest", "food", "rumors"]
+    },
+    
+    "marta_fabbra": {
+      "id": "marta_fabbra",
+      "name": "Marta",
+      "title": "Maestra Fabbra",
+      "description": "Una donna muscolosa con capelli corti e bruciature sulle braccia. Parla poco ma il suo lavoro parla per lei.",
+      "home": "albachiara.fabbro",
+      "role": "merchant",
+      "disposition_default": "neutral",
+      "knowledge": ["weapons", "armor", "metals"],
+      "services": ["buy", "sell", "repair", "craft"]
+    },
+    
+    "padre_aldric": {
+      "id": "padre_aldric",
+      "name": "Padre Aldric",
+      "title": "Sacerdote della Luce",
+      "description": "Un uomo calvo di mezza età con un sorriso gentile. Porta una veste bianca semplice con un simbolo solare.",
+      "home": "albachiara.tempio",
+      "role": "healer",
+      "disposition_default": "friendly",
+      "knowledge": ["religion", "healing", "undead"],
+      "services": ["heal", "bless", "sanctuary"]
+    },
+    
+    "guardia_tomas": {
+      "id": "guardia_tomas",
+      "name": "Tomas",
+      "title": "Guardia del Villaggio",
+      "description": "Un giovane con una lancia troppo grande per lui e un'armatura che ha visto giorni migliori. Prende il suo lavoro molto sul serio.",
+      "home": "albachiara.piazza",
+      "role": "guard",
+      "disposition_default": "neutral",
+      "knowledge": ["security", "village_layout", "recent_events"],
+      "dialogue_hooks": [
+        "Può indicare dove trovare persone o luoghi",
+        "Avvisa di pericoli recenti",
+        "È impressionabile e vuole dimostrare il suo valore"
+      ]
+    }
+  }
+}

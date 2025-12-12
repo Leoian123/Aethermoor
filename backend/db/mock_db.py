@@ -218,8 +218,24 @@ class MockDB:
                     'equipped_slot': ce['equipped_slot']
                 })
         
-        # Inventario
-        char['inventory'] = self.get_where('inventory', character_id=character_id)
+        # Inventario arricchito con dati equipment
+        raw_inventory = self.get_where('inventory', character_id=character_id)
+        char['inventory'] = []
+        for inv_item in raw_inventory:
+            # Cerca i dati equipment corrispondenti
+            eq_data = self.get_equipment_by_name(inv_item['item_name'])
+            if eq_data:
+                char['inventory'].append({
+                    **inv_item,
+                    'type': eq_data.get('type'),
+                    'equip_tags': eq_data.get('equip_tags', []),
+                    'rarity': eq_data.get('rarity', 'common'),
+                    'description': eq_data.get('description'),
+                    'stats_bonus': eq_data.get('stats_bonus', {})
+                })
+            else:
+                # Item generico senza dati equipment
+                char['inventory'].append(inv_item)
         
         return char
     
@@ -316,6 +332,11 @@ class MockDB:
     # EQUIPMENT
     # ═══════════════════════════════════════
     
+    def get_equipment_by_name(self, name: str) -> Optional[Dict]:
+        """Trova equipment per nome"""
+        equipment = self.get_where('equipment', name=name)
+        return equipment[0] if equipment else None
+    
     def equip_item(self, character_id: str, equipment_id: str, slot: str) -> Dict:
         """Equipaggia un item in uno slot"""
         # Rimuovi item precedente nello stesso slot
@@ -327,6 +348,85 @@ class MockDB:
             'equipment_id': equipment_id,
             'equipped_slot': slot
         })
+    
+    def equip_from_inventory(self, character_id: str, item_name: str, slot: str) -> Optional[Dict]:
+        """Equipaggia un item dall'inventario in uno slot specifico"""
+        # Trova l'item nell'inventario
+        inv_items = self.get_where('inventory', character_id=character_id, item_name=item_name)
+        if not inv_items:
+            return None
+        
+        # Trova l'equipment corrispondente
+        equipment = self.get_equipment_by_name(item_name)
+        if not equipment:
+            return None
+        
+        # Verifica che lo slot sia compatibile con equip_tags
+        equip_tags = equipment.get('equip_tags', [])
+        if slot not in equip_tags:
+            print(f"DEBUG: Slot '{slot}' non in equip_tags {equip_tags}")
+            return None
+        
+        # Se c'è già qualcosa equipaggiato nello slot, spostalo in inventario
+        existing = self.get_where('character_equipment', character_id=character_id, equipped_slot=slot)
+        for eq in existing:
+            old_equipment = self.get_by_id('equipment', eq['equipment_id'])
+            if old_equipment:
+                self.add_to_inventory(character_id, old_equipment['name'], 1)
+            self.delete('character_equipment', eq['id'])
+        
+        # Rimuovi dall'inventario
+        self.remove_from_inventory(character_id, item_name, 1)
+        
+        # Equipaggia
+        return self.equip_item(character_id, equipment['id'], slot)
+    
+    def unequip_to_inventory(self, character_id: str, slot: str) -> Optional[Dict]:
+        """Rimuovi equipment dallo slot e metti in inventario"""
+        # Trova cosa c'è nello slot
+        equipped = self.get_where('character_equipment', character_id=character_id, equipped_slot=slot)
+        if not equipped:
+            return None
+        
+        for eq in equipped:
+            equipment = self.get_by_id('equipment', eq['equipment_id'])
+            if equipment:
+                # Aggiungi all'inventario
+                self.add_to_inventory(character_id, equipment['name'], 1)
+            # Rimuovi dall'equipped
+            self.delete('character_equipment', eq['id'])
+        
+        return {'success': True, 'slot': slot}
+    
+    def move_equipment(self, character_id: str, from_slot: str, to_slot: str) -> Optional[Dict]:
+        """Sposta equipment da uno slot a un altro (se compatibile)"""
+        # Trova cosa c'è nello slot di origine
+        equipped = self.get_where('character_equipment', character_id=character_id, equipped_slot=from_slot)
+        if not equipped:
+            return None
+        
+        eq_record = equipped[0]
+        equipment = self.get_by_id('equipment', eq_record['equipment_id'])
+        if not equipment:
+            return None
+        
+        # Verifica che il to_slot sia compatibile
+        equip_tags = equipment.get('equip_tags', [])
+        if to_slot not in equip_tags:
+            return None
+        
+        # Se c'è qualcosa nel to_slot, spostalo in inventario
+        existing_in_target = self.get_where('character_equipment', character_id=character_id, equipped_slot=to_slot)
+        for ex in existing_in_target:
+            old_eq = self.get_by_id('equipment', ex['equipment_id'])
+            if old_eq:
+                self.add_to_inventory(character_id, old_eq['name'], 1)
+            self.delete('character_equipment', ex['id'])
+        
+        # Aggiorna lo slot dell'item
+        self.update('character_equipment', eq_record['id'], {'equipped_slot': to_slot})
+        
+        return {'success': True, 'from_slot': from_slot, 'to_slot': to_slot, 'item': equipment['name']}
     
     # ═══════════════════════════════════════
     # INVENTORY

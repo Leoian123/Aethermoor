@@ -1,0 +1,101 @@
+{
+  "nodes": {
+    "reg_valdris": {
+      "id": "reg_valdris",
+      "name": "Valdris",
+      "node_type": "region",
+      "description": "Valdris: antica città-stato costruita ai confini tra i regni umani e le terre selvagge. Un baluardo di civiltà contro il caos esterno.",
+      "tags": [
+        "human_kingdom",
+        "settlement",
+        "frontier"
+      ],
+      "parent_id": null,
+      "depth": 0,
+      "hex_q": null,
+      "hex_r": null,
+      "visited": true,
+      "discovered": true,
+      "npcs": [],
+      "items": [],
+      "first_visited": "2025-12-11T14:57:34.543304",
+      "last_visited": "2025-12-11T15:01:54.314980"
+    },
+    "loc_valdris_ingresso": {
+      "id": "loc_valdris_ingresso",
+      "name": "Porte di Valdris",
+      "node_type": "location",
+      "description": "Le massicce porte di pietra grigia si ergono alte, presidiate da guardie in armatura di mezza placca. Ai lati, torri di avvistamento squadrano l'orizzonte con occhi vigili.",
+      "tags": [
+        "outdoor",
+        "frontier",
+        "city_gate"
+      ],
+      "parent_id": "reg_valdris",
+      "depth": 1,
+      "hex_q": null,
+      "hex_r": null,
+      "visited": false,
+      "discovered": true,
+      "npcs": [],
+      "items": [],
+      "first_visited": null,
+      "last_visited": null
+    },
+    "loc_locanda_grifone": {
+      "id": "loc_locanda_grifone",
+      "name": "Locanda del Grifone Azzurro",
+      "node_type": "location",
+      "description": "Un locale ampio e rumoroso, con travi di legno scuro e camino centrale. L'odore di zuppa e pane appena sfornato riempie l'aria.",
+      "tags": [
+        "tavern",
+        "social",
+        "indoor",
+        "rest"
+      ],
+      "parent_id": "reg_valdris",
+      "depth": 1,
+      "hex_q": null,
+      "hex_r": null,
+      "visited": false,
+      "discovered": true,
+      "npcs": [],
+      "items": [],
+      "first_visited": null,
+      "last_visited": null
+    }
+  },
+  "edges": [
+    {
+      "from_id": "reg_valdris",
+      "to_id": "loc_valdris_ingresso",
+      "label": "accesso",
+      "edge_type": "normal",
+      "bidirectional": true,
+      "hidden": false,
+      "locked": false,
+      "condition": ""
+    },
+    {
+      "from_id": "reg_valdris",
+      "to_id": "loc_locanda_grifone",
+      "label": "accesso",
+      "edge_type": "normal",
+      "bidirectional": true,
+      "hidden": false,
+      "locked": false,
+      "condition": ""
+    },
+    {
+      "from_id": "loc_valdris_ingresso",
+      "to_id": "loc_locanda_grifone",
+      "label": "strada principale",
+      "edge_type": "normal",
+      "bidirectional": true,
+      "hidden": false,
+      "locked": false,
+      "condition": ""
+    }
+  ],
+  "current_node_id": "reg_valdris"
+}

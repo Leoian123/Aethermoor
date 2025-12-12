@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <rect fill="#1a1a2e" width="80" height="80"/>
+  <circle cx="40" cy="30" r="15" fill="#3d3d5c"/>
+  <ellipse cx="40" cy="65" rx="25" ry="20" fill="#3d3d5c"/>
+  <text x="40" y="85" text-anchor="middle" fill="#666" font-size="8" font-family="sans-serif">Portrait</text>
+</svg>

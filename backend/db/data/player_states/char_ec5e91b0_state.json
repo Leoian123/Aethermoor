@@ -1,0 +1,21 @@
+{
+  "character_id": "char_ec5e91b0",
+  "position": {
+    "region_id": "valeria",
+    "zone_id": "lumengarde",
+    "location_id": "albachiara",
+    "sublocation_id": "albachiara.locanda_orso"
+  },
+  "discovered_sublocations": {},
+  "discovered_connections": [],
+  "visit_history": {
+    "albachiara.piazza": [
+      "2025-12-12T13:32:03.650801"
+    ],
+    "albachiara.locanda_orso": [
+      "2025-12-12T13:32:27.126158"
+    ]
+  },
+  "npc_dispositions": {},
+  "flags": {}
+}

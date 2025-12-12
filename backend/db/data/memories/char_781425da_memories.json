@@ -1,0 +1,115 @@
+{
+  "albachiara.piazza": {
+    "location_id": "albachiara.piazza",
+    "character_id": "char_781425da",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Dove sono?"
+      },
+      {
+        "role": "assistant",
+        "content": "Ti trovi nella Piazza del Sole di Albachiara, cuore pulsante di questo piccolo villaggio della Valle di Lumengarde. \n\nIl sole di mezzogiorno battè sulla pietra levigata della fontana centrale, facendo scintillare gocce d'acqua cristallina. Intorno a te, panchine di legno stagionato riposano all'ombra di un maestoso tiglio secolare, le cui fronde si muovono appena accarezzate da una brezza leggera.\n\nUn giovane guardiano, Tomas, è in piedi poco distante. Ha l'aria seria di chi vuole dimostrare il proprio valore, con un'armatura che sembra essere stata di qualcun altro e una lancia che quasi lo sovrasta.\n\nI vicoli che si dipartono dalla piazza conducono verso la locanda, la bottega del fabbro, il tempio e la casa di Elena la Saggia. L'ambiente è tranquillo, con pochi abitanti che si muovono pigri sotto il calore del meriggio.\n\nCosa vorresti fare?"
+      },
+      {
+        "role": "user",
+        "content": "Voglio muovermi verso la locanda"
+      }
+    ],
+    "flags": {},
+    "npc_dispositions": {},
+    "items_here": [],
+    "key_events": [
+      "Incontrato Bruno"
+    ],
+    "visit_count": 0,
+    "first_visited": null,
+    "last_visited": null
+  },
+  "albachiara.locanda_orso": {
+    "location_id": "albachiara.locanda_orso",
+    "character_id": "char_781425da",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Dove sono?"
+      },
+      {
+        "role": "assistant",
+        "content": "Ti trovi nella Piazza del Sole di Albachiara, cuore pulsante di questo piccolo villaggio della Valle di Lumengarde. \n\nIl sole di mezzogiorno battè sulla pietra levigata della fontana centrale, facendo scintillare gocce d'acqua cristallina. Intorno a te, panchine di legno stagionato riposano all'ombra di un maestoso tiglio secolare, le cui fronde si muovono appena accarezzate da una brezza leggera.\n\nUn giovane guardiano, Tomas, è in piedi poco distante. Ha l'aria seria di chi vuole dimostrare il proprio valore, con un'armatura che sembra essere stata di qualcun altro e una lancia che quasi lo sovrasta.\n\nI vicoli che si dipartono dalla piazza conducono verso la locanda, la bottega del fabbro, il tempio e la casa di Elena la Saggia. L'ambiente è tranquillo, con pochi abitanti che si muovono pigri sotto il calore del meriggio.\n\nCosa vorresti fare?"
+      },
+      {
+        "role": "user",
+        "content": "Voglio muovermi verso la locanda"
+      },
+      {
+        "role": "assistant",
+        "content": "Ti muovi verso nord, attraversando la piazza, in direzione della locanda dell'Orso Danzante.\n\n<move to=\"albachiara.locanda_orso\"/>\n\nLa locanda si erge davanti a te, un edificio in pietra e legno dalla facciata consumata dal tempo. Un'insegna di legno con l'immagine di un orso che balla ciondola sopra la porta d'ingresso.\n\nQuando ti avvicini, gli odori ti avvolgono: legno bruciato, birra e spezie. Dal suo interno provengono suoni soffusi di conversazioni e il tintinnio occasionale di boccali.\n\n[NPC: Bruno | disposition: neutral]\n\nL'oste, un uomo corpulento con un grembiule macchiato e un paio di baffi folti, sta pulendo un bancone di legno consunto. Solleva lo sguardo verso di te, valutandoti con occhi esperti.\n\n\"Ben arrivato, forestiero. Cosa posso fare per te?\""
+      },
+      {
+        "role": "user",
+        "content": "\"Potrei avere una stanza? Ho solo 5 corone\""
+      },
+      {
+        "role": "assistant",
+        "content": "Bruno incrocia le braccia massicce, strofinando un cencio sporco su un bicchiere. Il suo sguardo si sofferma sulle tue monete, poi torna al tuo viso.\n\n\"Cinque corone, eh? Normalmente una notte costa sette corone. Ma...\" \n\nSi interrompe, squadrandoti con aria critica.\n\n[NPC: Bruno | disposition: neutral]\n\n\"Hai una faccia che racconta storie. Posso dartela a sei corone, ma vorrei qualcosa in cambio. Nel retro della locanda ho alcuni sacchi di carbone che devono essere sistemati. Mi aiuti a trasportarli nel magazzino?\"\n\nLa sua proposta sembra equa. Una camera calda e un giaciglio per una piccola fatica fisica.\n\nCosa rispondi?"
+      },
+      {
+        "role": "user",
+        "content": "\"Certo, dimmi dove e lascia fare a me\"\n\nLo aiuto con i sacchi di carbone"
+      },
+      {
+        "role": "assistant",
+        "content": "[NPC: Bruno | disposition: friendly]\n\nBruno sorride, soddisfatto della tua disponibilità. \"Seguimi, giovane.\"\n\n<enter to=\"albachiara.locanda_orso.retro\"/>\n\nIl retro della locanda è uno spazio stretto e polveroso. Accatastati in un angolo, ci sono diversi sacchi di carbone pesanti e ricoperti di polvere. L'aria è umida e sa di muffa.\n\n\"Questi vanno portati nel magazzino. Non sono leggeri, ci vorranno due viaggi.\"\n\n[ROLL: Forza | result: successo | DC: medio]\n\nCon movenze agili, sollevi un primo sacco sulle spalle. Nonostante il peso, lo porti senza problemi nel piccolo magazzino accanto.\n\nBruno annuisce, impressionato. \"Bravo ragazzo. Un altro giro e abbiamo finito.\"\n\nVuoi continuare ad aiutarlo?"
+      },
+      {
+        "role": "user",
+        "content": "Finisco il lavoro"
+      }
+    ],
+    "flags": {},
+    "npc_dispositions": {},
+    "items_here": [],
+    "key_events": [
+      "Incontrato Bruno",
+      "Incontrato Bruno",
+      "Ottenuto Chiave camera locanda"
+    ],
+    "visit_count": 1,
+    "first_visited": "2025-12-12T13:10:13.368865",
+    "last_visited": "2025-12-12T13:10:13.368865"
+  },
+  "albachiara.locanda_orso.stanze": {
+    "location_id": "albachiara.locanda_orso.stanze",
+    "character_id": "char_781425da",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Entro nella stanza",
+        "timestamp": "2025-12-12T13:12:39.007503"
+      },
+      {
+        "role": "assistant",
+        "content": "<enter to=\"albachiara.locanda_orso.stanze.camera_3\"/>\n\n[NAME: Corax]\n\nLa stanza numero 3 è piccola ma accogliente. Un giaciglio con un materasso di paglia coperto da una coperta di lana ruvida occupa un angolo. Accanto, un piccolo tavolo di legno con un bacile di ceramica per lavarsi. Una finestra stretta lascia filtrare un raggio di luce che illumina particelle di polvere danzanti.\n\nLe pareti sono di legno grezzo, con alcune screpolature che lasciano intravedere gli interstizi. Un chiodo arrugginito regge un gancio per appendervi vestiti o oggetti.\n\nL'odore è quello tipico delle stanze di locanda: un mix di legno, un po' di muffa e il sentore di sapone vecchio. Il materasso sembra pulito, anche se non lussuoso.\n\n[CONDITION: rested | duration: short_rest]\n\nHai diverse opzioni: riposarti, controllare i tuoi oggetti, osservare meglio la stanza o preparti per qualcos'altro.\n\nCosa vorresti fare?",
+        "timestamp": "2025-12-12T13:12:39.008512"
+      },
+      {
+        "role": "user",
+        "content": "Mi alleno per migliorare la mia forza con dei piegamenti",
+        "timestamp": "2025-12-12T13:13:06.866589"
+      },
+      {
+        "role": "assistant",
+        "content": "[ROLL: Forza | result: successo | DC: medio]\n[XP: 5]\n[SPHERE: terra +1]\n\nSposti il materasso di lato per avere più spazio. La stanza è stretta, ma sufficiente per un allenamento basilare. Inizi una serie di piegamenti, il corpo che si piega e si raddrizza con movimenti controllati.\n\nI primi dieci sono abbastanza agevoli. Poi, man mano che prosegui, i muscoli iniziano a bruciare. Il legno del pavimento scricchiola appena sotto i tuoi movimenti, mentre gocce di sudore ti solcano la fronte.\n\nVentesimo piegamento. Le braccia tremano, ma non molli. C'è qualcosa nella disciplina del movimento che ricorda l'addestramento dei ladri: ogni ripetizione è un passo verso il controllo, verso la padronanza.\n\nQuando termini, ti rialzi respirando profondamente. I muscoli sono stanchi ma più forti. Senti una leggera connessione con la sfera della Terra - resistenza, persistenza, forza interiore.\n\nVuoi continuare l'allenamento o fare altro?",
+        "timestamp": "2025-12-12T13:13:06.866589"
+      }
+    ],
+    "flags": {},
+    "npc_dispositions": {},
+    "items_here": [],
+    "key_events": [],
+    "visit_count": 1,
+    "first_visited": "2025-12-12T13:12:04.017603",
+    "last_visited": "2025-12-12T13:12:04.017603"
+  }
+}

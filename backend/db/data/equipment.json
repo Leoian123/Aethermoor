@@ -6,36 +6,40 @@
     "id": "eq_iron_sword",
     "name": "Spada di Ferro",
     "type": "weapon",
-    "slot": "main_hand",
+    "equip_tags": ["main_hand", "off_hand"],
+    "rarity": "common",
     "description": "Una solida spada di ferro, l'arma di ogni guerriero.",
-    "stats_bonus": {"damage": 15, "accuracy": 5},
+    "stats_bonus": {"str": 2},
     "requirements": {"str": 12}
   },
   {
     "id": "eq_ash_staff",
     "name": "Bastone di Frassino",
     "type": "weapon",
-    "slot": "two_hand",
+    "equip_tags": ["two_hand"],
+    "rarity": "uncommon",
     "description": "Un bastone incantato che amplifica il potere magico.",
-    "stats_bonus": {"spell_power": 10, "mana": 20},
+    "stats_bonus": {"int": 3},
     "requirements": {"int": 12}
   },
   {
     "id": "eq_sharp_dagger",
     "name": "Daga Affilata",
     "type": "weapon",
-    "slot": "main_hand",
+    "equip_tags": ["main_hand", "off_hand"],
+    "rarity": "common",
     "description": "Una lama corta perfetta per colpi precisi.",
-    "stats_bonus": {"damage": 10, "crit_chance": 8},
+    "stats_bonus": {"dex": 2},
     "requirements": {"dex": 12}
   },
   {
     "id": "eq_blessed_mace",
     "name": "Mazza Benedetta",
     "type": "weapon",
-    "slot": "main_hand",
+    "equip_tags": ["main_hand"],
+    "rarity": "uncommon",
     "description": "Un'arma consacrata efficace contro i non-morti.",
-    "stats_bonus": {"damage": 12, "holy_damage": 5},
+    "stats_bonus": {"str": 1, "int": 1},
     "requirements": {"str": 10}
   },
   {
@@ -45,75 +49,96 @@
     "id": "eq_leather_armor",
     "name": "Armatura di Cuoio Rinforzato",
     "type": "armor",
-    "slot": "chest",
+    "equip_tags": ["chest"],
+    "rarity": "common",
     "description": "Cuoio indurito che offre protezione senza limitare i movimenti.",
-    "stats_bonus": {"armor": 15, "evasion": 5},
+    "stats_bonus": {"vit": 2},
     "requirements": {}
   },
   {
     "id": "eq_cloth_robes",
     "name": "Vesti di Stoffa",
     "type": "armor",
-    "slot": "chest",
+    "equip_tags": ["chest"],
+    "rarity": "common",
     "description": "Vesti leggere intessute con fili arcani.",
-    "stats_bonus": {"armor": 5, "mana_regen": 3},
+    "stats_bonus": {"int": 2},
     "requirements": {}
   },
   {
     "id": "eq_soft_leather",
     "name": "Armatura di Cuoio Morbido",
     "type": "armor",
-    "slot": "chest",
+    "equip_tags": ["chest"],
+    "rarity": "common",
     "description": "Cuoio flessibile che non produce rumore.",
-    "stats_bonus": {"armor": 10, "stealth": 10},
+    "stats_bonus": {"dex": 2},
     "requirements": {}
   },
   {
     "id": "eq_sacred_robes",
     "name": "Vesti Sacre",
     "type": "armor",
-    "slot": "chest",
+    "equip_tags": ["chest"],
+    "rarity": "uncommon",
     "description": "Abiti benedetti che proteggono dalle forze oscure.",
-    "stats_bonus": {"armor": 8, "magic_resist": 10},
+    "stats_bonus": {"int": 1, "vit": 1},
     "requirements": {}
+  },
+  {
+    "id": "eq_duelist_cloak",
+    "name": "Cappa da Duellante",
+    "type": "armor",
+    "equip_tags": ["chest", "off_hand"],
+    "rarity": "rare",
+    "description": "Una cappa elegante che può essere usata per parare o come protezione leggera.",
+    "stats_bonus": {"dex": 3},
+    "requirements": {"dex": 14}
+  },
+  {
+    "_comment": "========== SCUDI =========="
+  },
+  {
+    "id": "eq_wooden_shield",
+    "name": "Scudo di Legno",
+    "type": "shield",
+    "equip_tags": ["off_hand"],
+    "rarity": "common",
+    "description": "Uno scudo robusto di legno rinforzato.",
+    "stats_bonus": {"vit": 1},
+    "requirements": {"str": 10}
   },
   {
     "_comment": "========== ACCESSORI =========="
   },
   {
-    "id": "eq_wooden_shield",
-    "name": "Scudo di Legno",
-    "type": "accessory",
-    "slot": "off_hand",
-    "description": "Uno scudo robusto di legno rinforzato.",
-    "stats_bonus": {"block_chance": 15, "armor": 5},
-    "requirements": {"str": 10}
-  },
-  {
     "id": "eq_basic_grimoire",
     "name": "Grimorio Basilare",
     "type": "accessory",
-    "slot": "off_hand",
+    "equip_tags": ["off_hand"],
+    "rarity": "common",
     "description": "Un libro di incantesimi per maghi alle prime armi.",
-    "stats_bonus": {"spell_power": 5, "mana": 10},
+    "stats_bonus": {"int": 2},
     "requirements": {"int": 10}
   },
   {
     "id": "eq_lockpick_set",
     "name": "Kit da Scasso",
     "type": "accessory",
-    "slot": "belt",
+    "equip_tags": ["belt"],
+    "rarity": "common",
     "description": "Strumenti per aprire serrature e disattivare trappole.",
-    "stats_bonus": {"lockpicking": 20, "trap_disarm": 15},
+    "stats_bonus": {"dex": 1},
     "requirements": {"dex": 10}
   },
   {
     "id": "eq_holy_symbol",
     "name": "Simbolo Sacro",
     "type": "accessory",
-    "slot": "neck",
+    "equip_tags": ["neck"],
+    "rarity": "uncommon",
     "description": "Un simbolo della divinità che amplifica i poteri divini.",
-    "stats_bonus": {"healing_power": 10, "holy_damage": 5},
+    "stats_bonus": {"int": 1, "vit": 1},
     "requirements": {}
   }
 ]

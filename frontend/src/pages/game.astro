@@ -4,6 +4,7 @@ import Layout from '../components/Layout.astro';
 import Header from '../components/ui/Header.astro';
 import Button from '../components/ui/Button.astro';
 import ChatContainer from '../components/chat/ChatContainer.astro';
+import MiniMap from '../components/map/MiniMap.astro';
 ---
 
 <Layout title="STATISFY RPG - Gioco">
@@ -28,15 +29,20 @@ import ChatContainer from '../components/chat/ChatContainer.astro';
     
     <ChatContainer />
   </div>
+  
+  <!-- Mini-mappa -->
+  <MiniMap />
 </Layout>
 
 <script>
-  import { parseTags, formatTagsForDisplay } from '../lib/tagParser.js';
-  import { sendChatMessage, getCharacterBySlot } from '../lib/api.js';
+  import { parseTags, formatTagsForDisplay, stripLocationTags } from '../lib/tagParser.js';
+  import { sendChatMessage, expandMessage, switchLocation, getCharacterBySlot, getCurrentLocation } from '../lib/api.js';
   
   // State
   let character = null;
   let history = [];
+  let miniMap = null;
+  let currentLocationId = '';
   
   // DOM
   const chatMessages = document.getElementById('chat-messages');
@@ -58,6 +64,43 @@ import ChatContainer from '../components/chat/ChatContainer.astro';
   }
   
   // ═══════════════════════════════════════
+  // CHAT PERSISTENCE (localStorage)
+  // ═══════════════════════════════════════
+  
+  function getChatStorageKey(): string {
+    if (!character) return '';
+    return `statisfy_chat_${character.id}_${currentLocationId || 'default'}`;
+  }
+  
+  function saveChat(): void {
+    const key = getChatStorageKey();
+    if (!key) return;
+    try {
+      localStorage.setItem(key, JSON.stringify(history));
+    } catch (e) {
+      console.warn('Impossibile salvare chat:', e);
+    }
+  }
+  
+  function loadChat(): void {
+    const key = getChatStorageKey();
+    if (!key) return;
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        history = JSON.parse(saved);
+        // Ripopola UI
+        history.forEach(msg => {
+          addMessage(msg.content, msg.role === 'user', undefined, false);
+        });
+      }
+    } catch (e) {
+      console.warn('Impossibile caricare chat:', e);
+      history = [];
+    }
+  }
+  
+  // ═══════════════════════════════════════
   // INIT
   // ═══════════════════════════════════════
   
@@ -72,6 +115,26 @@ import ChatContainer from '../components/chat/ChatContainer.astro';
       
       character = result.character;
       updateHeaderInfo();
+      
+      // Carica location corrente
+      try {
+        const locResult = await getCurrentLocation(character.id);
+        if (locResult.current_location) {
+          currentLocationId = locResult.current_location.id;
+        }
+      } catch (e) {
+        console.log('Nessuna location salvata');
+      }
+      
+      // Carica chat salvata per questa location
+      loadChat();
+      
+      // Inizializza MiniMap
+      if (window.MiniMapController) {
+        miniMap = new window.MiniMapController();
+        miniMap.setCharacterId(character.id);
+        miniMap.refresh();
+      }
       
     } catch (e) {
       console.error('Errore caricamento personaggio:', e);
@@ -92,19 +155,45 @@ import ChatContainer from '../components/chat/ChatContainer.astro';
   // CHAT
   // ═══════════════════════════════════════
   
-  function addMessage(content: string, isUser = false) {
+  function addMessage(content: string, isUser = false, messageId?: string, persist = true) {
     const msgDiv = document.createElement('div');
     msgDiv.className = `message message--${isUser ? 'user' : 'ai'}`;
+    if (messageId) msgDiv.dataset.messageId = messageId;
     
     let displayContent = content;
     if (!isUser) {
-      displayContent = formatTagsForDisplay(content);
+      // Rimuovi tag location XML e formatta tag meccanici
+      displayContent = stripLocationTags(content);
+      displayContent = formatTagsForDisplay(displayContent);
     }
     
-    msgDiv.innerHTML = `
-      <div class="message__label">${isUser ? 'Tu' : 'Game Master'}</div>
-      <div class="message__content">${displayContent}</div>
-    `;
+    // Struttura messaggio con pulsante Focus per messaggi GM
+    if (isUser) {
+      msgDiv.innerHTML = `
+        <div class="message__label">Tu</div>
+        <div class="message__content">${displayContent}</div>
+      `;
+    } else {
+      const id = messageId || `msg-${Date.now()}`;
+      msgDiv.innerHTML = `
+        <div class="message__header">
+          <span class="message__label">Game Master</span>
+          <button class="btn-focus" data-msg-id="${id}" title="Espandi con più dettagli">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35"></path>
+              <path d="M11 8v6M8 11h6"></path>
+            </svg>
+            Focus
+          </button>
+        </div>
+        <div class="message__content" data-original="${encodeURIComponent(content)}">${displayContent}</div>
+      `;
+      
+      // Aggiungi listener per il pulsante Focus
+      const focusBtn = msgDiv.querySelector('.btn-focus');
+      focusBtn?.addEventListener('click', () => handleFocus(id, content));
+    }
     
     if (typingIndicator && chatMessages) {
       chatMessages.insertBefore(msgDiv, typingIndicator);
@@ -115,6 +204,117 @@ import ChatContainer from '../components/chat/ChatContainer.astro';
     if (chatMessages) {
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
+    
+    return msgDiv;
+  }
+  
+  function addRecapMessage(recap: string) {
+    if (!recap) return;
+    
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message message--recap';
+    msgDiv.innerHTML = `
+      <div class="message__label">📜 Memoria</div>
+      <div class="message__content">${recap.replace(/\n/g, '<br>')}</div>
+    `;
+    
+    if (typingIndicator && chatMessages) {
+      chatMessages.insertBefore(msgDiv, typingIndicator);
+    } else {
+      chatMessages?.appendChild(msgDiv);
+    }
+  }
+  
+  // ═══════════════════════════════════════
+  // FOCUS (Espansione con Sonnet)
+  // ═══════════════════════════════════════
+  
+  async function handleFocus(messageId: string, originalContent: string) {
+    // Trova il messaggio
+    const msgDiv = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!msgDiv) return;
+    
+    const contentDiv = msgDiv.querySelector('.message__content');
+    const focusBtn = msgDiv.querySelector('.btn-focus') as HTMLButtonElement;
+    
+    if (!contentDiv || !focusBtn) return;
+    
+    // Già espanso?
+    if (msgDiv.classList.contains('expanded')) {
+      // Toggle back to original
+      const original = decodeURIComponent(contentDiv.getAttribute('data-original') || '');
+      let displayContent = stripLocationTags(original);
+      displayContent = formatTagsForDisplay(displayContent);
+      contentDiv.innerHTML = displayContent;
+      msgDiv.classList.remove('expanded');
+      focusBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="M21 21l-4.35-4.35"></path>
+          <path d="M11 8v6M8 11h6"></path>
+        </svg>
+        Focus
+      `;
+      return;
+    }
+    
+    // Mostra loading
+    focusBtn.disabled = true;
+    focusBtn.innerHTML = `
+      <span class="loading-spinner"></span>
+      Espando...
+    `;
+    
+    try {
+      // Determina il tipo di contesto
+      const contextType = detectContextType(originalContent);
+      
+      const data = await expandMessage(
+        originalContent,
+        contextType,
+        character,
+        currentLocationId,
+        history.slice(-10)
+      );
+      
+      // Aggiorna contenuto con versione espansa
+      let expandedDisplay = stripLocationTags(data.expanded);
+      expandedDisplay = formatTagsForDisplay(expandedDisplay);
+      contentDiv.innerHTML = expandedDisplay;
+      
+      // Marca come espanso
+      msgDiv.classList.add('expanded');
+      focusBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="M21 21l-4.35-4.35"></path>
+          <path d="M8 11h6"></path>
+        </svg>
+        Riduci
+      `;
+      
+    } catch (error) {
+      console.error('Errore espansione:', error);
+      focusBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="M21 21l-4.35-4.35"></path>
+          <path d="M11 8v6M8 11h6"></path>
+        </svg>
+        Focus
+      `;
+    }
+    
+    focusBtn.disabled = false;
+  }
+  
+  function detectContextType(content: string): string {
+    // Rileva il tipo di contesto per analytics
+    if (content.includes('[DMG:') || content.includes('[SPELL:')) return 'combat';
+    if (content.includes('[NPC:')) return 'dialogue';
+    if (content.includes('[LORE:')) return 'lore';
+    if (content.includes('[ITEM:')) return 'discovery';
+    return 'description';
   }
   
   function showTyping() {
@@ -134,6 +334,7 @@ import ChatContainer from '../components/chat/ChatContainer.astro';
     
     addMessage(text, true);
     history.push({ role: 'user', content: text });
+    saveChat();  // Salva dopo messaggio user
     
     if (chatInput) {
       chatInput.value = '';
@@ -147,7 +348,8 @@ import ChatContainer from '../components/chat/ChatContainer.astro';
       const data = await sendChatMessage(
         text,
         history.slice(-20),
-        character
+        character,
+        currentLocationId
       );
       
       hideTyping();
@@ -155,11 +357,34 @@ import ChatContainer from '../components/chat/ChatContainer.astro';
       // Parse tag
       const tags = parseTags(data.response);
       console.log('Tags:', tags);
+      console.log('Model:', data.model); // Dovrebbe essere 'haiku'
       
-      // TODO: sincronizzare col backend e aggiornare character
+      // Log location updates se presenti
+      if (data.location_updates) {
+        console.log('Location updates:', data.location_updates);
+        
+        // Aggiorna mini-mappa se ci sono stati cambiamenti
+        if (data.location_updates.locations_created?.length > 0 ||
+            data.location_updates.movements?.length > 0 ||
+            data.location_updates.modifications?.length > 0) {
+          miniMap?.refresh();
+        }
+        
+        // Se c'è stato un movimento, aggiorna location corrente
+        if (data.location_updates.movements?.length > 0) {
+          const lastMovement = data.location_updates.movements[data.location_updates.movements.length - 1];
+          // Supporta sia oggetto {to: "..."} che stringa diretta
+          const newLocation = typeof lastMovement === 'string' ? lastMovement : lastMovement.to;
+          if (newLocation) {
+            await handleLocationChange(currentLocationId, newLocation);
+          }
+        }
+      }
       
-      addMessage(data.response, false);
+      const messageId = `msg-${Date.now()}`;
+      addMessage(data.response, false, messageId);
       history.push({ role: 'assistant', content: data.response });
+      saveChat();  // Salva dopo messaggio assistant
       
     } catch (error) {
       hideTyping();
@@ -169,6 +394,37 @@ import ChatContainer from '../components/chat/ChatContainer.astro';
     
     if (btnSend) btnSend.disabled = false;
     chatInput?.focus();
+  }
+  
+  async function handleLocationChange(fromLocation: string, toLocation: string) {
+    if (!character) return;
+    
+    try {
+      const result = await switchLocation(
+        character.id,
+        fromLocation,
+        toLocation,
+        history
+      );
+      
+      // Aggiorna location corrente
+      currentLocationId = toLocation;
+      
+      // Se c'è un recap (non è la prima visita), mostralo
+      if (result.recap) {
+        addRecapMessage(result.recap);
+      }
+      
+      // Carica la history della nuova location
+      if (result.messages && result.messages.length > 0) {
+        // Potresti voler caricare i messaggi precedenti
+        // Per ora manteniamo solo la storia corrente
+        console.log(`Loaded ${result.messages.length} messages from location ${toLocation}`);
+      }
+      
+    } catch (error) {
+      console.error('Errore switch location:', error);
+    }
   }
   
   // Event listeners
@@ -239,5 +495,104 @@ import ChatContainer from '../components/chat/ChatContainer.astro';
   .btn-sheet:hover {
     border-color: var(--accent);
     color: var(--accent);
+  }
+  
+  /* ═══════════════════════════════════════
+     MESSAGE HEADER & FOCUS BUTTON
+     ═══════════════════════════════════════ */
+  
+  .message__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+  }
+  
+  .btn-focus {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px solid var(--mist);
+    border-radius: 4px;
+    color: var(--ash);
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    opacity: 0;
+  }
+  
+  .message--ai:hover .btn-focus {
+    opacity: 1;
+  }
+  
+  .btn-focus:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 169, 89, 0.1);
+  }
+  
+  .btn-focus:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+  
+  .btn-focus svg {
+    flex-shrink: 0;
+  }
+  
+  /* Loading spinner nel pulsante */
+  .loading-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--mist);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  /* Messaggio espanso */
+  .message--ai.expanded {
+    border-left: 3px solid var(--accent);
+    background: linear-gradient(90deg, rgba(201, 169, 89, 0.05) 0%, transparent 100%);
+  }
+  
+  .message--ai.expanded .btn-focus {
+    opacity: 1;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  /* ═══════════════════════════════════════
+     RECAP MESSAGE
+     ═══════════════════════════════════════ */
+  
+  .message--recap {
+    background: linear-gradient(135deg, rgba(139, 115, 85, 0.15) 0%, rgba(139, 115, 85, 0.05) 100%);
+    border: 1px solid rgba(139, 115, 85, 0.3);
+    border-radius: 8px;
+    padding: var(--space-md);
+    margin: var(--space-md) 0;
+  }
+  
+  .message--recap .message__label {
+    color: #b8a67d;
+    font-family: var(--font-narrative);
+    font-size: 0.85rem;
+    margin-bottom: var(--space-xs);
+  }
+  
+  .message--recap .message__content {
+    color: var(--bone);
+    font-style: italic;
+    font-size: 0.9rem;
+    line-height: 1.6;
   }
 </style>

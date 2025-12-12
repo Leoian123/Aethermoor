@@ -1,0 +1,33 @@
+{
+  "albachiara.piazza": {
+    "location_id": "albachiara.piazza",
+    "character_id": "char_ec5e91b0",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Vado alla locanda"
+      }
+    ],
+    "flags": {},
+    "npc_dispositions": {},
+    "items_here": [],
+    "key_events": [
+      "Incontrato Bruno"
+    ],
+    "visit_count": 0,
+    "first_visited": null,
+    "last_visited": null
+  },
+  "albachiara.locanda_orso": {
+    "location_id": "albachiara.locanda_orso",
+    "character_id": "char_ec5e91b0",
+    "messages": [],
+    "flags": {},
+    "npc_dispositions": {},
+    "items_here": [],
+    "key_events": [],
+    "visit_count": 1,
+    "first_visited": "2025-12-12T13:32:27.441938",
+    "last_visited": "2025-12-12T13:32:27.441938"
+  }
+}

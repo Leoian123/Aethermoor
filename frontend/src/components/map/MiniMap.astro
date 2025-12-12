@@ -1,0 +1,1281 @@
+---
+/**
+ * MiniMap.astro
+ * Mini-mappa radiale che mostra la location corrente e i vicini
+ */
+---
+
+<div class="minimap-container" id="minimap-container">
+  <div class="minimap-header">
+    <span class="minimap-icon">🗺️</span>
+    <span class="minimap-title">Mappa</span>
+    <button class="minimap-expand" id="minimap-expand" aria-label="Espandi mappa" title="Espandi">
+      <svg viewBox="0 0 24 24" width="14" height="14">
+        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+      </svg>
+    </button>
+    <button class="minimap-toggle" id="minimap-toggle" aria-label="Toggle mappa">
+      <svg viewBox="0 0 24 24" width="14" height="14">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </button>
+  </div>
+  
+  <div class="minimap-content" id="minimap-content">
+    <svg 
+      id="minimap-svg" 
+      viewBox="-120 -120 240 240" 
+      class="minimap-svg"
+    >
+      <!-- Edges (linee) - renderizzate prima -->
+      <g id="minimap-edges" class="minimap-edges"></g>
+      
+      <!-- Nodi -->
+      <g id="minimap-nodes" class="minimap-nodes"></g>
+      
+      <!-- Labels -->
+      <g id="minimap-labels" class="minimap-labels"></g>
+    </svg>
+    
+    <!-- Location name display -->
+    <div class="minimap-location-name" id="minimap-location-name">
+      <span class="location-current">—</span>
+    </div>
+    
+    <!-- Empty state -->
+    <div class="minimap-empty" id="minimap-empty">
+      <span>Esplora per rivelare la mappa</span>
+    </div>
+  </div>
+</div>
+
+<!-- Tooltip (fuori dal container per z-index) -->
+<div class="minimap-tooltip" id="minimap-tooltip">
+  <div class="tooltip-name"></div>
+  <div class="tooltip-desc"></div>
+  <div class="tooltip-tags"></div>
+</div>
+
+<!-- Modal espansa -->
+<div class="minimap-modal-overlay" id="minimap-modal-overlay">
+  <div class="minimap-modal">
+    <div class="minimap-modal-header">
+      <span class="minimap-icon">🗺️</span>
+      <span class="minimap-modal-title">Mappa di Esplorazione</span>
+      <button class="minimap-modal-close" id="minimap-modal-close" aria-label="Chiudi">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="minimap-modal-content">
+      <svg 
+        id="minimap-svg-expanded" 
+        viewBox="-200 -200 400 400" 
+        class="minimap-svg-expanded"
+      >
+        <g id="minimap-edges-expanded" class="minimap-edges"></g>
+        <g id="minimap-nodes-expanded" class="minimap-nodes"></g>
+        <g id="minimap-labels-expanded" class="minimap-labels"></g>
+      </svg>
+    </div>
+    <div class="minimap-modal-footer">
+      <div class="minimap-legend">
+        <span class="legend-item"><span class="legend-dot current"></span> Posizione attuale</span>
+        <span class="legend-item"><span class="legend-dot visited"></span> Visitato</span>
+        <span class="legend-item"><span class="legend-dot unvisited"></span> Inesplorato</span>
+        <span class="legend-item"><span class="legend-dot locked"></span> Bloccato</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .minimap-container {
+    position: fixed;
+    bottom: var(--space-lg);
+    left: var(--space-lg);
+    width: 220px;
+    background: #d4c4a8;
+    background-image: 
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"),
+      linear-gradient(135deg, #e8dcc8 0%, #c9b896 50%, #b8a67d 100%);
+    border: 3px solid #8b7355;
+    border-radius: 4px;
+    overflow: hidden;
+    z-index: 50;
+    box-shadow: 
+      0 4px 15px rgba(0, 0, 0, 0.4),
+      inset 0 0 20px rgba(139, 115, 85, 0.2);
+    transition: var(--transition-smooth);
+  }
+  
+  .minimap-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255, 248, 220, 0.3);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  
+  .minimap-container:hover {
+    box-shadow: 
+      0 6px 20px rgba(0, 0, 0, 0.5),
+      inset 0 0 25px rgba(139, 115, 85, 0.3);
+  }
+  
+  .minimap-container.collapsed .minimap-content {
+    display: none;
+  }
+  
+  .minimap-container.collapsed {
+    width: auto;
+  }
+  
+  .minimap-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: linear-gradient(180deg, #a08060 0%, #8b7355 100%);
+    border-bottom: 2px solid #6b5344;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .minimap-icon {
+    font-size: 1rem;
+    filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.3));
+  }
+  
+  .minimap-title {
+    flex: 1;
+    font-family: var(--font-narrative);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #f5f0e6;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+  }
+  
+  .minimap-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: none;
+    color: #f5f0e6;
+    cursor: pointer;
+    transition: var(--transition-fast);
+  }
+  
+  .minimap-toggle:hover {
+    color: #fff;
+  }
+  
+  .minimap-toggle svg {
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    transition: transform var(--transition-fast);
+  }
+  
+  .minimap-container.collapsed .minimap-toggle svg {
+    transform: rotate(180deg);
+  }
+  
+  .minimap-content {
+    position: relative;
+    padding: var(--space-sm);
+  }
+  
+  .minimap-svg {
+    width: 100%;
+    height: 170px;
+    display: block;
+  }
+  
+  /* Edges - stile inchiostro antico */
+  .minimap-edges line {
+    stroke: #5c4a3a;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  
+  .minimap-edges line.locked {
+    stroke: #8b4513;
+    stroke-dasharray: 6 3;
+    opacity: 0.7;
+  }
+  
+  /* Nodi */
+  .minimap-nodes circle {
+    transition: var(--transition-fast);
+    cursor: pointer;
+    stroke-width: 2;
+  }
+  
+  .minimap-nodes circle:hover {
+    filter: brightness(1.15);
+    transform: scale(1.1);
+  }
+  
+  /* Nodo centrale (current) - rosso bandiera */
+  .node-current {
+    fill: #c41e3a;
+    stroke: #8b0000;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  }
+  
+  /* Nodo visitato - marrone scuro */
+  .node-visited {
+    fill: #6b5344;
+    stroke: #4a3728;
+  }
+  
+  /* Nodo non visitato - beige chiaro con ? */
+  .node-unvisited {
+    fill: #c9b896;
+    stroke: #8b7355;
+    stroke-dasharray: 3 2;
+  }
+  
+  /* Nodo locked */
+  .node-locked {
+    fill: #8b4513;
+    stroke: #5c3317;
+  }
+  
+  /* Ring intorno al nodo current */
+  .node-ring {
+    fill: none;
+    stroke: #c41e3a;
+    stroke-width: 2;
+    opacity: 0.5;
+    animation: pulseRing 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulseRing {
+    0%, 100% { 
+      r: 20;
+      opacity: 0.5;
+    }
+    50% { 
+      r: 26;
+      opacity: 0.2;
+    }
+  }
+  
+  /* Labels - stile calligrafia */
+  .minimap-labels text {
+    font-family: var(--font-narrative);
+    font-size: 9px;
+    fill: #3d2b1f;
+    text-anchor: middle;
+    pointer-events: none;
+    font-weight: 500;
+  }
+  
+  .minimap-labels text.label-current {
+    font-weight: 700;
+    fill: #1a0f0a;
+    font-size: 10px;
+  }
+  
+  .minimap-labels text.label-unknown {
+    fill: #8b7355;
+    font-style: italic;
+  }
+  
+  /* Lock icon */
+  .lock-icon {
+    font-size: 10px;
+  }
+  
+  /* Location name sotto la mappa */
+  .minimap-location-name {
+    text-align: center;
+    padding: var(--space-sm) var(--space-xs);
+    border-top: 2px solid #8b7355;
+    background: linear-gradient(180deg, transparent 0%, rgba(139, 115, 85, 0.1) 100%);
+  }
+  
+  .location-current {
+    font-family: var(--font-narrative);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #3d2b1f;
+    font-style: italic;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+  }
+  
+  /* Compass decoration */
+  .minimap-content::after {
+    content: '✦';
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 14px;
+    color: #8b7355;
+    opacity: 0.6;
+  }
+  
+  /* Empty state */
+  .minimap-empty {
+    display: none;
+    text-align: center;
+    padding: var(--space-xl) var(--space-sm);
+    color: #6b5344;
+    font-size: 0.85rem;
+    font-style: italic;
+    font-family: var(--font-narrative);
+  }
+  
+  .minimap-empty.active {
+    display: block;
+  }
+  
+  .minimap-empty.active + .minimap-svg,
+  .minimap-empty.active ~ .minimap-location-name {
+    display: none;
+  }
+  
+  /* Responsive */
+  @media (max-width: 600px) {
+    .minimap-container {
+      bottom: var(--space-sm);
+      left: var(--space-sm);
+      width: 180px;
+    }
+    
+    .minimap-svg {
+      height: 130px;
+    }
+  }
+  
+  /* ═══════════════════════════════════════
+     EXPAND BUTTON
+     ═══════════════════════════════════════ */
+  
+  .minimap-expand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: none;
+    color: #f5f0e6;
+    cursor: pointer;
+    transition: var(--transition-fast);
+  }
+  
+  .minimap-expand:hover {
+    color: #fff;
+    transform: scale(1.1);
+  }
+  
+  .minimap-expand svg {
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+  }
+  
+  /* ═══════════════════════════════════════
+     TOOLTIP
+     ═══════════════════════════════════════ */
+  
+  .minimap-tooltip {
+    position: fixed;
+    background: #2a2318;
+    border: 2px solid #8b7355;
+    border-radius: 6px;
+    padding: 10px 14px;
+    min-width: 160px;
+    max-width: 250px;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  
+  .minimap-tooltip.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .minimap-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: #8b7355;
+  }
+  
+  .minimap-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #2a2318;
+  }
+  
+  .tooltip-name {
+    font-family: var(--font-narrative);
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e8dcc8;
+    margin-bottom: 4px;
+  }
+  
+  .tooltip-desc {
+    font-family: var(--font-narrative);
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #b8a67d;
+    line-height: 1.4;
+  }
+  
+  .tooltip-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  
+  .tooltip-tags:empty {
+    display: none;
+  }
+  
+  .tooltip-tag {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    background: #3d2b1f;
+    color: #c9b896;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  
+  /* ═══════════════════════════════════════
+     MODAL ESPANSA
+     ═══════════════════════════════════════ */
+  
+  .minimap-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+  
+  .minimap-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .minimap-modal {
+    width: 90vw;
+    max-width: 700px;
+    height: 80vh;
+    max-height: 600px;
+    background: #d4c4a8;
+    background-image: 
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"),
+      linear-gradient(135deg, #e8dcc8 0%, #c9b896 50%, #b8a67d 100%);
+    border: 4px solid #8b7355;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 
+      0 10px 40px rgba(0, 0, 0, 0.6),
+      inset 0 0 30px rgba(139, 115, 85, 0.2);
+    transform: scale(0.9);
+    transition: transform 0.3s;
+  }
+  
+  .minimap-modal-overlay.active .minimap-modal {
+    transform: scale(1);
+  }
+  
+  .minimap-modal-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-lg);
+    background: linear-gradient(180deg, #a08060 0%, #8b7355 100%);
+    border-bottom: 3px solid #6b5344;
+    border-radius: 4px 4px 0 0;
+  }
+  
+  .minimap-modal-title {
+    flex: 1;
+    font-family: var(--font-narrative);
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #f5f0e6;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+  }
+  
+  .minimap-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    color: #f5f0e6;
+    cursor: pointer;
+    transition: var(--transition-fast);
+  }
+  
+  .minimap-modal-close:hover {
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+  }
+  
+  .minimap-modal-close svg {
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+  }
+  
+  .minimap-modal-content {
+    flex: 1;
+    padding: var(--space-md);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .minimap-svg-expanded {
+    width: 100%;
+    height: 100%;
+    max-height: 450px;
+  }
+  
+  /* Nodi più grandi nella modal */
+  .minimap-modal .minimap-nodes circle {
+    cursor: pointer;
+  }
+  
+  .minimap-modal .minimap-labels text {
+    font-size: 11px;
+  }
+  
+  .minimap-modal .minimap-labels text.label-current {
+    font-size: 12px;
+  }
+  
+  .minimap-modal-footer {
+    padding: var(--space-sm) var(--space-lg);
+    background: rgba(139, 115, 85, 0.15);
+    border-top: 2px solid #8b7355;
+  }
+  
+  .minimap-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    justify-content: center;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-narrative);
+    font-size: 0.8rem;
+    color: #3d2b1f;
+  }
+  
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid;
+  }
+  
+  .legend-dot.current {
+    background: #c41e3a;
+    border-color: #8b0000;
+  }
+  
+  .legend-dot.visited {
+    background: #6b5344;
+    border-color: #4a3728;
+  }
+  
+  .legend-dot.unvisited {
+    background: #c9b896;
+    border-color: #8b7355;
+  }
+  
+  .legend-dot.locked {
+    background: #8b4513;
+    border-color: #5c3317;
+  }
+</style>
+
+<script>
+  /**
+   * MiniMap Controller
+   * Gestisce il rendering SVG, tooltip, modal espansa, pan e zoom
+   */
+  
+  class MiniMapController {
+    constructor() {
+      // Mini mappa
+      this.container = document.getElementById('minimap-container');
+      this.content = document.getElementById('minimap-content');
+      this.toggle = document.getElementById('minimap-toggle');
+      this.expandBtn = document.getElementById('minimap-expand');
+      this.svg = document.getElementById('minimap-svg');
+      this.edgesGroup = document.getElementById('minimap-edges');
+      this.nodesGroup = document.getElementById('minimap-nodes');
+      this.labelsGroup = document.getElementById('minimap-labels');
+      this.locationName = document.getElementById('minimap-location-name');
+      this.emptyState = document.getElementById('minimap-empty');
+      
+      // Tooltip
+      this.tooltip = document.getElementById('minimap-tooltip');
+      
+      // Modal
+      this.modalOverlay = document.getElementById('minimap-modal-overlay');
+      this.modalClose = document.getElementById('minimap-modal-close');
+      this.svgExpanded = document.getElementById('minimap-svg-expanded');
+      this.edgesGroupExpanded = document.getElementById('minimap-edges-expanded');
+      this.nodesGroupExpanded = document.getElementById('minimap-nodes-expanded');
+      this.labelsGroupExpanded = document.getElementById('minimap-labels-expanded');
+      
+      this.characterId = null;
+      this.data = null;
+      this.isExpanded = false;
+      
+      // Pan & Zoom state
+      this.viewBox = { x: -120, y: -120, w: 240, h: 240 };
+      this.viewBoxExpanded = { x: -200, y: -200, w: 400, h: 400 };
+      this.isPanning = false;
+      this.panStart = { x: 0, y: 0 };
+      this.minZoom = 0.5;
+      this.maxZoom = 3;
+      
+      this.init();
+    }
+    
+    init() {
+      // Toggle collapse
+      this.toggle?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleCollapse();
+      });
+      
+      // Expand button
+      this.expandBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.openModal();
+      });
+      
+      // Close modal
+      this.modalClose?.addEventListener('click', () => this.closeModal());
+      this.modalOverlay?.addEventListener('click', (e) => {
+        if (e.target === this.modalOverlay) this.closeModal();
+      });
+      
+      // ESC to close
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.isExpanded) this.closeModal();
+      });
+      
+      // Pan & Zoom per mini mappa
+      this.initPanZoom(this.svg, this.viewBox, false);
+      
+      // Load collapsed state
+      const collapsed = localStorage.getItem('minimap-collapsed') === 'true';
+      if (collapsed) {
+        this.container?.classList.add('collapsed');
+      }
+    }
+    
+    initPanZoom(svgElement, viewBoxState, isExpanded) {
+      if (!svgElement) return;
+      
+      // Zoom con rotella
+      svgElement.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const vb = isExpanded ? this.viewBoxExpanded : this.viewBox;
+        
+        // Calcola fattore zoom
+        const zoomFactor = e.deltaY > 0 ? 1.15 : 0.85;
+        
+        // Calcola nuove dimensioni
+        const newW = vb.w * zoomFactor;
+        const newH = vb.h * zoomFactor;
+        
+        // Limiti zoom
+        const baseSize = isExpanded ? 400 : 240;
+        if (newW < baseSize * this.minZoom || newW > baseSize * this.maxZoom) return;
+        
+        // Zoom centrato sul mouse
+        const rect = svgElement.getBoundingClientRect();
+        const mouseX = (e.clientX - rect.left) / rect.width;
+        const mouseY = (e.clientY - rect.top) / rect.height;
+        
+        vb.x += (vb.w - newW) * mouseX;
+        vb.y += (vb.h - newH) * mouseY;
+        vb.w = newW;
+        vb.h = newH;
+        
+        this.updateViewBox(svgElement, vb);
+      }, { passive: false });
+      
+      // Pan con click + drag
+      svgElement.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // Solo click sinistro
+        this.isPanning = true;
+        this.panStart = { x: e.clientX, y: e.clientY };
+        svgElement.style.cursor = 'grabbing';
+      });
+      
+      svgElement.addEventListener('mousemove', (e) => {
+        if (!this.isPanning) return;
+        
+        const vb = isExpanded ? this.viewBoxExpanded : this.viewBox;
+        const rect = svgElement.getBoundingClientRect();
+        
+        // Converti pixel in coordinate SVG
+        const dx = (e.clientX - this.panStart.x) * (vb.w / rect.width);
+        const dy = (e.clientY - this.panStart.y) * (vb.h / rect.height);
+        
+        vb.x -= dx;
+        vb.y -= dy;
+        
+        this.panStart = { x: e.clientX, y: e.clientY };
+        this.updateViewBox(svgElement, vb);
+      });
+      
+      svgElement.addEventListener('mouseup', () => {
+        this.isPanning = false;
+        svgElement.style.cursor = 'grab';
+      });
+      
+      svgElement.addEventListener('mouseleave', () => {
+        this.isPanning = false;
+        svgElement.style.cursor = 'grab';
+      });
+      
+      // Cursore grab
+      svgElement.style.cursor = 'grab';
+    }
+    
+    updateViewBox(svgElement, vb) {
+      svgElement.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+    }
+    
+    resetView(isExpanded) {
+      if (isExpanded) {
+        this.viewBoxExpanded = { x: -200, y: -200, w: 400, h: 400 };
+        if (this.svgExpanded) {
+          this.updateViewBox(this.svgExpanded, this.viewBoxExpanded);
+        }
+      } else {
+        this.viewBox = { x: -120, y: -120, w: 240, h: 240 };
+        if (this.svg) {
+          this.updateViewBox(this.svg, this.viewBox);
+        }
+      }
+    }
+    
+    toggleCollapse() {
+      this.container?.classList.toggle('collapsed');
+      const isCollapsed = this.container?.classList.contains('collapsed');
+      localStorage.setItem('minimap-collapsed', isCollapsed.toString());
+    }
+    
+    openModal() {
+      this.isExpanded = true;
+      this.modalOverlay?.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
+      // Init pan/zoom per modal (dopo che è visibile)
+      setTimeout(() => {
+        this.initPanZoom(this.svgExpanded, this.viewBoxExpanded, true);
+        this.renderExpanded();
+      }, 50);
+    }
+    
+    closeModal() {
+      this.isExpanded = false;
+      this.modalOverlay?.classList.remove('active');
+      document.body.style.overflow = '';
+      this.resetView(true);
+    }
+    
+    setCharacterId(id) {
+      this.characterId = id;
+    }
+    
+    async refresh() {
+      if (!this.characterId) return;
+      
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/character/${this.characterId}/location/neighborhood`
+        );
+        const data = await response.json();
+        this.render(data);
+      } catch (error) {
+        console.warn('MiniMap: impossibile caricare dati', error);
+        this.showEmpty();
+      }
+    }
+    
+    render(data) {
+      this.data = data;
+      
+      // Nuovo formato: nodes + edges + current_id
+      const hasNodes = data.nodes && data.nodes.length > 0;
+      const hasOldFormat = data.current && data.current.name;
+      
+      if (!data.has_location || (!hasNodes && !hasOldFormat)) {
+        this.showEmpty();
+        return;
+      }
+      
+      this.hideEmpty();
+      this.renderToSvg(
+        this.edgesGroup, 
+        this.nodesGroup, 
+        this.labelsGroup, 
+        data, 
+        70,  // radius
+        14,  // nodeSize
+        false // isExpanded
+      );
+      
+      // Update location name display
+      const nameSpan = this.locationName?.querySelector('.location-current');
+      if (nameSpan) {
+        // Nuovo formato: trova il nome dal nodo corrente
+        if (hasNodes && data.current_id) {
+          const currentNode = data.nodes.find(n => n.id === data.current_id || n.is_current);
+          nameSpan.textContent = currentNode?.name || data.location_name || '—';
+        } else if (hasOldFormat) {
+          nameSpan.textContent = data.current.name;
+        }
+      }
+      
+      // Se modal aperta, aggiorna anche quella
+      if (this.isExpanded) {
+        this.renderExpanded();
+      }
+    }
+    
+    renderExpanded() {
+      if (!this.data || !this.data.has_location) return;
+      
+      this.renderToSvg(
+        this.edgesGroupExpanded,
+        this.nodesGroupExpanded,
+        this.labelsGroupExpanded,
+        this.data,
+        120, // radius più grande
+        20,  // nodeSize più grande
+        true // isExpanded
+      );
+    }
+    
+    renderToSvg(edgesGroup, nodesGroup, labelsGroup, data, radius, nodeSize, isExpanded) {
+      if (!edgesGroup || !nodesGroup || !labelsGroup) return;
+      
+      // Clear
+      edgesGroup.innerHTML = '';
+      nodesGroup.innerHTML = '';
+      labelsGroup.innerHTML = '';
+      
+      // Nuovo formato: nodes + edges
+      const nodes = data.nodes || [];
+      const edges = data.edges || [];
+      const currentId = data.current_id;
+      
+      // Fallback al vecchio formato se presente
+      if (nodes.length === 0 && data.current) {
+        const neighbors = data.neighbors || [];
+        this.renderRadialLayout(edgesGroup, nodesGroup, labelsGroup, data.current, neighbors, radius, nodeSize, isExpanded);
+        return;
+      }
+      
+      if (nodes.length === 0) return;
+      
+      // Calcola posizioni per tutti i nodi
+      const positions = this.calculateGraphPositions(nodes, edges, currentId, radius);
+      
+      // Render edges
+      edges.forEach(edge => {
+        const fromPos = positions[edge.from];
+        const toPos = positions[edge.to];
+        if (fromPos && toPos) {
+          this.renderEdge(edgesGroup, fromPos.x, fromPos.y, toPos.x, toPos.y, false);
+        }
+      });
+      
+      // Render nodes
+      nodes.forEach(node => {
+        const pos = positions[node.id];
+        if (!pos) return;
+        
+        const isCurrent = node.id === currentId || node.is_current;
+        if (isCurrent) {
+          this.renderCurrentNode(nodesGroup, pos.x, pos.y, node, nodeSize + 2, isExpanded);
+        } else {
+          this.renderNode(nodesGroup, pos.x, pos.y, node, false, nodeSize, isExpanded);
+        }
+        
+        // Label
+        const labelOffset = nodeSize + 8;
+        this.renderLabel(labelsGroup, pos.x, pos.y + labelOffset, node.name, isCurrent, isExpanded, node.visited);
+      });
+    }
+    
+    renderRadialLayout(edgesGroup, nodesGroup, labelsGroup, current, neighbors, radius, nodeSize, isExpanded) {
+      // Vecchio layout radiale per backward compatibility
+      const positions = this.calculatePositions(neighbors.length, radius);
+      
+      neighbors.forEach((neighbor, i) => {
+        const pos = positions[i];
+        this.renderEdge(edgesGroup, 0, 0, pos.x, pos.y, neighbor.locked);
+      });
+      
+      neighbors.forEach((neighbor, i) => {
+        const pos = positions[i];
+        this.renderNode(nodesGroup, pos.x, pos.y, neighbor, false, nodeSize, isExpanded);
+        const labelOffset = nodeSize + 8;
+        this.renderLabel(labelsGroup, pos.x, pos.y + labelOffset, neighbor.name, false, isExpanded, neighbor.visited);
+      });
+      
+      this.renderCurrentNode(nodesGroup, 0, 0, current, nodeSize + 2, isExpanded);
+      this.renderLabel(labelsGroup, 0, nodeSize + 14, current.name, true, isExpanded, true);
+    }
+    
+    calculateGraphPositions(nodes, edges, currentId, radius) {
+      const positions = {};
+      
+      if (!nodes || nodes.length === 0) return positions;
+      
+      // Trova il nodo corrente e mettilo al centro
+      const currentNode = nodes.find(n => n.id === currentId || n.is_current);
+      if (currentNode) {
+        positions[currentNode.id] = { x: 0, y: 0 };
+      }
+      
+      // Ordina i nodi rimanenti
+      const otherNodes = nodes.filter(n => n.id !== currentId && !n.is_current);
+      
+      // Se non c'è nodo corrente, metti il primo nodo al centro
+      if (!currentNode && nodes.length > 0) {
+        positions[nodes[0].id] = { x: 0, y: 0 };
+      }
+      
+      if (otherNodes.length === 0) return positions;
+      
+      // Layout a spirale per i nodi non correnti
+      const angleStep = (2 * Math.PI) / Math.max(otherNodes.length, 1);
+      const startAngle = -Math.PI / 2;
+      
+      // Raggruppa per livello di connessione al nodo corrente
+      const connected = new Set();
+      
+      // Trova nodi direttamente connessi al corrente
+      const centerNodeId = currentNode?.id || nodes[0]?.id;
+      edges.forEach(edge => {
+        if (edge.from === centerNodeId || edge.to === centerNodeId) {
+          const otherId = edge.from === centerNodeId ? edge.to : edge.from;
+          connected.add(otherId);
+        }
+      });
+      
+      // Prima cerchia: nodi connessi direttamente
+      const connectedNodes = otherNodes.filter(n => connected.has(n.id));
+      const unconnectedNodes = otherNodes.filter(n => !connected.has(n.id));
+      
+      // Posiziona nodi connessi nel primo cerchio
+      const innerRadius = radius * 0.8;
+      connectedNodes.forEach((node, i) => {
+        const angle = startAngle + (i * (2 * Math.PI) / Math.max(connectedNodes.length, 1));
+        positions[node.id] = {
+          x: Math.cos(angle) * innerRadius,
+          y: Math.sin(angle) * innerRadius
+        };
+      });
+      
+      // Posiziona nodi non connessi nel cerchio esterno
+      const outerRadius = radius * 1.3;
+      unconnectedNodes.forEach((node, i) => {
+        const angle = startAngle + (i * (2 * Math.PI) / Math.max(unconnectedNodes.length, 1));
+        positions[node.id] = {
+          x: Math.cos(angle) * outerRadius,
+          y: Math.sin(angle) * outerRadius
+        };
+      });
+      
+      return positions;
+    }
+    
+    calculatePositions(count, radius) {
+      const positions = [];
+      
+      if (count === 0) return positions;
+      
+      // Distribuisci uniformemente in cerchio
+      const startAngle = -Math.PI / 2; // Inizia dall'alto
+      const angleStep = (2 * Math.PI) / count;
+      
+      for (let i = 0; i < count; i++) {
+        const angle = startAngle + (i * angleStep);
+        positions.push({
+          x: Math.cos(angle) * radius,
+          y: Math.sin(angle) * radius
+        });
+      }
+      
+      return positions;
+    }
+    
+    renderEdge(group, x1, y1, x2, y2, locked) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1.toString());
+      line.setAttribute('y1', y1.toString());
+      line.setAttribute('x2', x2.toString());
+      line.setAttribute('y2', y2.toString());
+      if (locked) {
+        line.classList.add('locked');
+      }
+      group.appendChild(line);
+    }
+    
+    renderNode(group, x, y, nodeData, isCurrent, size, isExpanded) {
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', x.toString());
+      circle.setAttribute('cy', y.toString());
+      circle.setAttribute('r', size.toString());
+      
+      if (isCurrent) {
+        circle.classList.add('node-current');
+      } else if (nodeData.locked) {
+        circle.classList.add('node-locked');
+      } else if (nodeData.visited) {
+        circle.classList.add('node-visited');
+      } else {
+        circle.classList.add('node-unvisited');
+      }
+      
+      // Store data for tooltip (con fallback per campi opzionali)
+      circle.setAttribute('data-name', nodeData.name || '');
+      circle.setAttribute('data-id', nodeData.id || '');
+      circle.setAttribute('data-visited', (nodeData.visited ?? false).toString());
+      circle.setAttribute('data-locked', (nodeData.locked ?? false).toString());
+      circle.setAttribute('data-label', nodeData.label || '');
+      circle.setAttribute('data-tags', (nodeData.tags || []).join(','));
+      
+      // Hover events (solo se non si sta facendo pan)
+      circle.addEventListener('mouseenter', (e) => {
+        if (!this.isPanning) this.showTooltip(e, nodeData);
+      });
+      circle.addEventListener('mouseleave', () => this.hideTooltip());
+      circle.addEventListener('mousemove', (e) => {
+        if (!this.isPanning) this.moveTooltip(e);
+      });
+      
+      group.appendChild(circle);
+      
+      // Add lock icon if locked
+      if (nodeData.locked) {
+        const lockText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lockText.setAttribute('x', x.toString());
+        lockText.setAttribute('y', (y + size * 0.3).toString());
+        lockText.setAttribute('text-anchor', 'middle');
+        lockText.setAttribute('class', 'lock-icon');
+        lockText.setAttribute('font-size', (size * 0.8).toString());
+        lockText.textContent = '🔒';
+        group.appendChild(lockText);
+      }
+      
+      // Add ? for unvisited
+      if (!nodeData.visited && !nodeData.locked) {
+        const questionMark = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        questionMark.setAttribute('x', x.toString());
+        questionMark.setAttribute('y', (y + size * 0.35).toString());
+        questionMark.setAttribute('text-anchor', 'middle');
+        questionMark.setAttribute('fill', '#6b5344');
+        questionMark.setAttribute('font-size', size.toString());
+        questionMark.setAttribute('font-weight', 'bold');
+        questionMark.setAttribute('font-family', 'var(--font-narrative)');
+        questionMark.textContent = '?';
+        group.appendChild(questionMark);
+      }
+    }
+    
+    renderCurrentNode(group, x, y, nodeData, size, isExpanded) {
+      // Pulse ring
+      const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      ring.setAttribute('cx', x.toString());
+      ring.setAttribute('cy', y.toString());
+      ring.setAttribute('r', (size + 4).toString());
+      ring.classList.add('node-ring');
+      group.appendChild(ring);
+      
+      // Main node
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', x.toString());
+      circle.setAttribute('cy', y.toString());
+      circle.setAttribute('r', size.toString());
+      circle.classList.add('node-current');
+      
+      // Hover events per current node (con fallback)
+      circle.setAttribute('data-name', nodeData.name || '');
+      circle.setAttribute('data-current', 'true');
+      circle.setAttribute('data-tags', (nodeData.tags || []).join(','));
+      circle.addEventListener('mouseenter', (e) => {
+        if (!this.isPanning) this.showTooltip(e, {...nodeData, visited: true, isCurrent: true});
+      });
+      circle.addEventListener('mouseleave', () => this.hideTooltip());
+      circle.addEventListener('mousemove', (e) => {
+        if (!this.isPanning) this.moveTooltip(e);
+      });
+      
+      group.appendChild(circle);
+      
+      // Flag/marker icon inside
+      const flag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      flag.setAttribute('x', x.toString());
+      flag.setAttribute('y', (y + size * 0.3).toString());
+      flag.setAttribute('text-anchor', 'middle');
+      flag.setAttribute('fill', '#fff');
+      flag.setAttribute('font-size', size.toString());
+      flag.textContent = '⚑';
+      group.appendChild(flag);
+    }
+    
+    renderLabel(group, x, y, text, isCurrent, isExpanded, isVisited) {
+      // Per nodi non visitati, mostra "???"
+      const displayText = isVisited ? text : '???';
+      
+      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', x.toString());
+      label.setAttribute('y', y.toString());
+      label.textContent = displayText;
+      
+      if (isCurrent) {
+        label.classList.add('label-current');
+      }
+      
+      if (!isVisited) {
+        label.classList.add('label-unknown');
+      }
+      
+      // Font size in base al contesto
+      const fontSize = isExpanded ? 11 : 9;
+      label.style.fontSize = `${fontSize}px`;
+      
+      group.appendChild(label);
+    }
+    
+    // ═══════════════════════════════════════
+    // TOOLTIP
+    // ═══════════════════════════════════════
+    
+    showTooltip(event, nodeData) {
+      if (!this.tooltip) return;
+      
+      const tooltipName = this.tooltip.querySelector('.tooltip-name');
+      const tooltipDesc = this.tooltip.querySelector('.tooltip-desc');
+      const tooltipTags = this.tooltip.querySelector('.tooltip-tags');
+      
+      // Nome - SEMPRE completo se visitato
+      if (tooltipName) {
+        tooltipName.textContent = nodeData.visited || nodeData.isCurrent ? nodeData.name : '???';
+      }
+      
+      // Descrizione
+      if (tooltipDesc) {
+        if (nodeData.isCurrent) {
+          tooltipDesc.textContent = 'Ti trovi qui';
+        } else if (nodeData.locked) {
+          tooltipDesc.textContent = `Passaggio bloccato${nodeData.label ? ` (${nodeData.label})` : ''}`;
+        } else if (!nodeData.visited) {
+          tooltipDesc.textContent = 'Chissà cosa c\'è qui...';
+        } else {
+          tooltipDesc.textContent = nodeData.label ? `Via: ${nodeData.label}` : 'Luogo già esplorato';
+        }
+      }
+      
+      // Tags (solo se visitato)
+      if (tooltipTags) {
+        tooltipTags.innerHTML = '';
+        if ((nodeData.visited || nodeData.isCurrent) && nodeData.tags && nodeData.tags.length > 0) {
+          nodeData.tags.forEach(tag => {
+            const tagSpan = document.createElement('span');
+            tagSpan.className = 'tooltip-tag';
+            tagSpan.textContent = tag;
+            tooltipTags.appendChild(tagSpan);
+          });
+        }
+      }
+      
+      this.tooltip.classList.add('visible');
+      this.moveTooltip(event);
+    }
+    
+    hideTooltip() {
+      this.tooltip?.classList.remove('visible');
+    }
+    
+    moveTooltip(event) {
+      if (!this.tooltip) return;
+      
+      // Posiziona rispetto al viewport, non al container
+      const x = event.clientX;
+      const y = event.clientY;
+      
+      // Posiziona sopra il cursore
+      this.tooltip.style.position = 'fixed';
+      this.tooltip.style.left = `${x}px`;
+      this.tooltip.style.top = `${y - 90}px`;
+      this.tooltip.style.transform = 'translateX(-50%)';
+    }
+    
+    showEmpty() {
+      this.emptyState?.classList.add('active');
+      this.svg?.classList.add('hidden');
+      this.locationName?.classList.add('hidden');
+    }
+    
+    hideEmpty() {
+      this.emptyState?.classList.remove('active');
+      this.svg?.classList.remove('hidden');
+      this.locationName?.classList.remove('hidden');
+    }
+  }
+  
+  // Export per uso da game.astro
+  window.MiniMapController = MiniMapController;
+</script>

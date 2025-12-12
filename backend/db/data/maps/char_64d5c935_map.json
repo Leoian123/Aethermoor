@@ -1,0 +1,116 @@
+{
+  "character_id": "char_64d5c935",
+  "current_location": "loc_valdris_gates",
+  "nodes": {
+    "loc_valdris_gates": {
+      "id": "loc_valdris_gates",
+      "name": "Porte di Valdris",
+      "description": "Le massicce porte di quercia ferrata della città-stato di Valdris, fiancheggiate da torri di guardia in pietra grigia. Mercanti, viaggiatori e carri si ammassano davanti al posto di blocco dove le guardie ispezionano i nuovi arrivati.",
+      "tags": [
+        "checkpoint",
+        "urban",
+        "fortified",
+        "outdoor"
+      ],
+      "npcs": [],
+      "items": [],
+      "visited": true,
+      "discovered": true
+    },
+    "loc_valdris_main_square": {
+      "id": "loc_valdris_main_square",
+      "name": "Piazza Principale di Valdris",
+      "description": "Il cuore pulsante della città-stato, una vasta piazza lastricata circondata da edifici in pietra e legno. Al centro svetta una fontana dedicata ai Progenitori, mentre mercanti e cittadini si affollano tra le bancarelle del mercato quotidiano.",
+      "tags": [
+        "social",
+        "urban",
+        "indoor",
+        "safe"
+      ],
+      "npcs": [],
+      "items": [],
+      "visited": false,
+      "discovered": true
+    },
+    "loc_strada_del_fiume": {
+      "id": "loc_strada_del_fiume",
+      "name": "Strada del Fiume",
+      "description": "Una strada sterrata che serpeggia lungo le rive del fiume Valdrin, costeggiata da salici piangenti. Si vedono mulini ad acqua in lontananza e barche da pesca ormeggiate lungo la riva fangosa.",
+      "tags": [
+        "commercial",
+        "safe",
+        "outdoor"
+      ],
+      "npcs": [],
+      "items": [],
+      "visited": false,
+      "discovered": true
+    },
+    "loc_accampamento_mercanti": {
+      "id": "loc_accampamento_mercanti",
+      "name": "Accampamento dei Mercanti",
+      "description": "Un'area di sosta temporanea dove caravane e mercanti accampano fuori dalle mura cittadine. Tende colorate, carri coperti e fuochi da campo creano un piccolo villaggio nomade che cambia di giorno in giorno.",
+      "tags": [
+        "temporary",
+        "commercial",
+        "outdoor"
+      ],
+      "npcs": [],
+      "items": [],
+      "visited": false,
+      "discovered": true
+    },
+    "loc_bosco_delle_ombre": {
+      "id": "loc_bosco_delle_ombre",
+      "name": "Margini del Bosco delle Ombre",
+      "description": "I primi alberi di una foresta antica e fitta, dove la luce del sole fatica a penetrare anche di giorno. Si dice che creature magiche e spiriti erranti abitino tra i suoi sentieri tortuosi.",
+      "tags": [
+        "dangerous",
+        "wilderness",
+        "outdoor"
+      ],
+      "npcs": [],
+      "items": [],
+      "visited": false,
+      "discovered": true
+    }
+  },
+  "edges": [
+    {
+      "from_id": "loc_valdris_gates",
+      "to_id": "loc_valdris_main_square",
+      "label": "Attraversa le Porte",
+      "bidirectional": false,
+      "hidden": false,
+      "locked": true,
+      "condition": ""
+    },
+    {
+      "from_id": "loc_valdris_gates",
+      "to_id": "loc_strada_del_fiume",
+      "label": "Sentiero verso il Fiume",
+      "bidirectional": true,
+      "hidden": false,
+      "locked": false,
+      "condition": ""
+    },
+    {
+      "from_id": "loc_valdris_gates",
+      "to_id": "loc_accampamento_mercanti",
+      "label": "Verso l'Accampamento",
+      "bidirectional": true,
+      "hidden": false,
+      "locked": false,
+      "condition": ""
+    },
+    {
+      "from_id": "loc_valdris_gates",
+      "to_id": "loc_bosco_delle_ombre",
+      "label": "Sentiero nel Bosco",
+      "bidirectional": true,
+      "hidden": false,
+      "locked": false,
+      "condition": ""
+    }
+  ]
+}
