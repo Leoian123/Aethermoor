@@ -1,20 +1,292 @@
 [
   {
-    "id": "char_ec5e91b0",
+    "id": "char_d35a7be3",
+    "user_id": "user_c144e59e",
     "slot": 0,
-    "name": "Corax",
-    "class_id": "cls_rogue",
+    "name": "Eric",
+    "class_id": "cls_mage",
+    "level": 1,
+    "xp": 22,
+    "hp_current": 80,
+    "hp_max": 250,
+    "mana_current": 350,
+    "mana_max": 400,
+    "str": 10,
+    "dex": 10,
+    "vit": 10,
+    "int": 30,
+    "stat_bonuses": {
+      "invested": {
+        "str": 0,
+        "dex": 0,
+        "vit": 0,
+        "int": 0
+      },
+      "level_up": {
+        "str": 0,
+        "dex": 0,
+        "vit": 0,
+        "int": 0
+      },
+      "training": {
+        "str": 0,
+        "dex": 0,
+        "vit": 0,
+        "int": 0
+      },
+      "titles": {
+        "str": 0,
+        "dex": 0,
+        "vit": 0,
+        "int": 0
+      }
+    },
+    "spheres": {},
+    "conditions": [],
+    "echoes": {},
+    "lore": {},
+    "created_at": "2026-03-06T08:24:09.810433",
+    "updated_at": "2026-03-09T10:02:49.260563",
+    "corone": 75,
+    "class": {
+      "id": "cls_mage",
+      "name": "Mago",
+      "description": "Manipolatore delle forze arcane e degli elementi. Specializzato in danno magico a distanza e controllo del campo di battaglia.",
+      "starting_ability_tag": "SPHERE_VIS_MAGIC_DART",
+      "starting_equipment_ids": [
+        "eq_ash_staff",
+        "eq_cloth_robes",
+        "eq_basic_grimoire"
+      ],
+      "hp_base": 60,
+      "hp_per_vit": 10,
+      "mana_base": 80,
+      "mana_per_int": 12
+    },
+    "skills": [
+      {
+        "id": "sk_vis_magic_dart",
+        "parent_id": "sk_vis",
+        "category": "sphere",
+        "type": "active",
+        "tag": "SPHERE_VIS_MAGIC_DART",
+        "name": "Dardo Magico",
+        "description": "Proietti pura energia arcana che colpisce infallibilmente.",
+        "base_cost": 15,
+        "cooldown": 0,
+        "effects": {
+          "damage": "10 + (mastery * 5)",
+          "type": "arcane",
+          "auto_hit": true
+        },
+        "requirements": {
+          "SPHERE_VIS": 1
+        },
+        "mastery": 1,
+        "unlocked_at": "2026-03-06T08:24:09.816966"
+      },
+      {
+        "id": "sk_vis",
+        "parent_id": null,
+        "category": "sphere",
+        "type": "passive",
+        "tag": "SPHERE_VIS",
+        "name": "Vis",
+        "description": "Affinità con l'energia magica pura. Il Progenitore Magnus divenne la forza che permea ogni incantesimo.",
+        "base_cost": 0,
+        "cooldown": null,
+        "effects": {
+          "spell_power": "+2% per mastery"
+        },
+        "requirements": null,
+        "mastery": 1,
+        "unlocked_at": "2026-03-06T08:24:09.818086"
+      }
+    ],
+    "equipment": [
+      {
+        "id": "eq_cloth_robes",
+        "name": "Vesti di Stoffa",
+        "type": "armor",
+        "category": "equipment",
+        "equip_tags": [
+          "chest"
+        ],
+        "rarity": "common",
+        "item_level": 1,
+        "description": "Vesti leggere intessute con fili arcani.",
+        "stats_bonus": {
+          "int": 2
+        },
+        "requirements": {},
+        "damage_min": 0,
+        "damage_max": 0,
+        "armor_value": 2,
+        "sell_price": 8,
+        "weight": 2.0,
+        "equipped_slot": "chest"
+      },
+      {
+        "id": "eq_ash_staff",
+        "name": "Bastone di Frassino",
+        "type": "weapon",
+        "category": "equipment",
+        "equip_tags": [
+          "two_hand"
+        ],
+        "rarity": "uncommon",
+        "item_level": 2,
+        "description": "Un bastone incantato che amplifica il potere magico.",
+        "stats_bonus": {
+          "int": 3
+        },
+        "requirements": {
+          "int": 12
+        },
+        "damage_min": 8,
+        "damage_max": 14,
+        "armor_value": 0,
+        "sell_price": 35,
+        "weight": 2.5,
+        "equipped_slot": "main_hand"
+      }
+    ],
+    "inventory": [
+      {
+        "id": "inv_707deb12",
+        "character_id": "char_d35a7be3",
+        "item_name": "Mantello del Cacciatore",
+        "quantity": 1,
+        "metadata": {}
+      },
+      {
+        "id": "inv_f82c76ea",
+        "character_id": "char_d35a7be3",
+        "item_name": "Pozione di Cura",
+        "quantity": 1,
+        "metadata": {},
+        "type": "consumable",
+        "category": "consumable",
+        "equip_tags": [],
+        "rarity": "common",
+        "description": "Una fiala di liquido rosso che rigenera le ferite. Guarisce 30 HP.",
+        "stats_bonus": {},
+        "item_level": 1,
+        "damage_min": 0,
+        "damage_max": 0,
+        "armor_value": 0,
+        "sell_price": 10,
+        "weight": 0.3,
+        "use_effect": {
+          "type": "heal",
+          "value": 30
+        },
+        "requirements": {}
+      },
+      {
+        "id": "inv_196b8914",
+        "character_id": "char_d35a7be3",
+        "item_name": "Grimorio Basilare",
+        "quantity": 1,
+        "metadata": {},
+        "type": "accessory",
+        "category": "equipment",
+        "equip_tags": [
+          "off_hand"
+        ],
+        "rarity": "common",
+        "description": "Un libro di incantesimi per maghi alle prime armi.",
+        "stats_bonus": {
+          "int": 2
+        },
+        "item_level": 1,
+        "damage_min": 0,
+        "damage_max": 0,
+        "armor_value": 0,
+        "sell_price": 12,
+        "weight": 1.5,
+        "use_effect": null,
+        "requirements": {
+          "int": 10
+        }
+      }
+    ],
+    "total_stats": {
+      "str": 10,
+      "dex": 10,
+      "vit": 10,
+      "int": 35
+    },
+    "derived": {
+      "phys_dmg_mult": 1.1,
+      "carry_max": 55.0,
+      "attacks_per_turn": 1.05,
+      "precision": 61.0,
+      "evasion": 0.5,
+      "move_speed": 102.0,
+      "hp_max": 250,
+      "hp_regen": 1.0,
+      "poison_resist": 2.0,
+      "element_resist": 1.0,
+      "mana_max": 400,
+      "magic_dmg_mult": 1.7,
+      "xp_bonus": 1.8,
+      "craft_bonus": 2.3
+    },
+    "invest_points_available": 0,
+    "xp_next": 100,
+    "two_hand_status": {
+      "is_two_hand": true,
+      "item_name": "Bastone di Frassino"
+    }
+  },
+  {
+    "id": "char_f5c7aa55",
+    "user_id": "user_00000001",
+    "slot": 0,
+    "name": "TestXP",
+    "class_id": "cls_warrior",
     "level": 1,
     "xp": 0,
-    "hp_current": 200,
-    "hp_max": 200,
-    "mana_current": 100,
-    "mana_max": 100,
-    "str": 10,
-    "dex": 30,
-    "vit": 10,
-    "int": 10,
-    "created_at": "2025-12-12T13:32:02.876768",
-    "updated_at": "2025-12-12T13:32:02.877843"
+    "hp_current": 280,
+    "hp_max": 280,
+    "mana_current": 170,
+    "mana_max": 170,
+    "str": 14,
+    "dex": 12,
+    "vit": 12,
+    "int": 12,
+    "stat_bonuses": {
+      "invested": {
+        "str": 0,
+        "dex": 0,
+        "vit": 0,
+        "int": 0
+      },
+      "level_up": {
+        "str": 0,
+        "dex": 0,
+        "vit": 0,
+        "int": 0
+      },
+      "training": {
+        "str": 0,
+        "dex": 0,
+        "vit": 0,
+        "int": 0
+      },
+      "titles": {
+        "str": 0,
+        "dex": 0,
+        "vit": 0,
+        "int": 0
+      }
+    },
+    "spheres": {},
+    "conditions": [],
+    "echoes": {},
+    "lore": {},
+    "created_at": "2026-03-06T10:41:56.218601",
+    "updated_at": "2026-03-06T10:41:56.218609"
   }
 ]

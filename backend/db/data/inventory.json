@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "id": "inv_707deb12",
+    "character_id": "char_d35a7be3",
+    "item_name": "Mantello del Cacciatore",
+    "quantity": 1,
+    "metadata": {}
+  },
+  {
+    "id": "inv_f82c76ea",
+    "character_id": "char_d35a7be3",
+    "item_name": "Pozione di Cura",
+    "quantity": 1,
+    "metadata": {}
+  },
+  {
+    "id": "inv_mig_001",
+    "character_id": "char_490bd5d1",
+    "item_name": "Grimorio Basilare",
+    "quantity": 1,
+    "metadata": {}
+  },
+  {
+    "id": "inv_196b8914",
+    "character_id": "char_d35a7be3",
+    "item_name": "Grimorio Basilare",
+    "quantity": 1,
+    "metadata": {}
+  }
+]

@@ -1,0 +1,273 @@
+---
+// login.astro - Login / Register
+import Layout from '../components/Layout.astro';
+---
+
+<Layout title="STATISFY RPG - Accedi">
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        Statisfy<span>RPG</span>
+      </div>
+      <p class="login-subtitle">Accedi al mondo di Aethermoor</p>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login">Accedi</button>
+        <button class="auth-tab" id="tab-register">Registrati</button>
+      </div>
+
+      <!-- Login Form -->
+      <form class="auth-form" id="form-login">
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" placeholder="Il tuo nome" autocomplete="username" required minlength="3" maxlength="20" />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" placeholder="La tua password" autocomplete="current-password" required minlength="6" />
+        </div>
+        <button type="submit" class="auth-submit" id="btn-login">Entra</button>
+      </form>
+
+      <!-- Register Form -->
+      <form class="auth-form" id="form-register" style="display:none">
+        <div class="form-group">
+          <label for="reg-username">Username</label>
+          <input type="text" id="reg-username" placeholder="Scegli un nome (3-20 car.)" autocomplete="username" required minlength="3" maxlength="20" />
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Password</label>
+          <input type="password" id="reg-password" placeholder="Min. 6 caratteri" autocomplete="new-password" required minlength="6" />
+        </div>
+        <div class="form-group">
+          <label for="reg-password2">Conferma Password</label>
+          <input type="password" id="reg-password2" placeholder="Ripeti la password" autocomplete="new-password" required minlength="6" />
+        </div>
+        <button type="submit" class="auth-submit" id="btn-register">Crea Account</button>
+      </form>
+
+      <p class="auth-error" id="auth-error"></p>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { loginUser, registerUser } from '../lib/api.js';
+  import { saveAuth, redirectIfAuthenticated } from '../lib/auth.js';
+
+  // Se gia' loggato, vai alla home
+  if (redirectIfAuthenticated()) { /* navigating */ }
+
+  let isLoginMode = true;
+
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegister = document.getElementById('tab-register');
+  const formLogin = document.getElementById('form-login');
+  const formRegister = document.getElementById('form-register');
+  const errorEl = document.getElementById('auth-error');
+
+  // Tab switching
+  tabLogin.addEventListener('click', () => {
+    isLoginMode = true;
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+    formLogin.style.display = 'block';
+    formRegister.style.display = 'none';
+    errorEl.textContent = '';
+  });
+
+  tabRegister.addEventListener('click', () => {
+    isLoginMode = false;
+    tabRegister.classList.add('active');
+    tabLogin.classList.remove('active');
+    formRegister.style.display = 'block';
+    formLogin.style.display = 'none';
+    errorEl.textContent = '';
+  });
+
+  // Login submit
+  formLogin.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn = document.getElementById('btn-login');
+
+    btn.disabled = true;
+    btn.textContent = 'Accesso in corso...';
+
+    try {
+      const data = await loginUser(username, password);
+      saveAuth(data.token, data.user);
+      window.location.href = '/home';
+    } catch (err) {
+      errorEl.textContent = err.serverMessage || err.message || 'Errore di accesso';
+      btn.disabled = false;
+      btn.textContent = 'Entra';
+    }
+  });
+
+  // Register submit
+  formRegister.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+
+    const username = document.getElementById('reg-username').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const password2 = document.getElementById('reg-password2').value;
+    const btn = document.getElementById('btn-register');
+
+    if (password !== password2) {
+      errorEl.textContent = 'Le password non coincidono';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creazione account...';
+
+    try {
+      const data = await registerUser(username, password);
+      saveAuth(data.token, data.user);
+      window.location.href = '/home';
+    } catch (err) {
+      errorEl.textContent = err.serverMessage || err.message || 'Errore di registrazione';
+      btn.disabled = false;
+      btn.textContent = 'Crea Account';
+    }
+  });
+</script>
+
+<style>
+  .login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+    background: linear-gradient(135deg, var(--abyss) 0%, var(--shadow) 100%);
+    border: 1px solid var(--mist);
+    border-radius: 16px;
+    padding: var(--space-xl);
+    text-align: center;
+  }
+
+  .login-logo {
+    font-family: var(--font-narrative);
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: var(--space-xs);
+  }
+  .login-logo span {
+    color: var(--smoke);
+    font-weight: 300;
+  }
+
+  .login-subtitle {
+    color: var(--ash);
+    font-size: 0.9rem;
+    margin-bottom: var(--space-lg);
+  }
+
+  .auth-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: var(--space-lg);
+    background: var(--void);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .auth-tab {
+    flex: 1;
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--ash);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .auth-tab.active {
+    background: var(--accent);
+    color: var(--void);
+    font-weight: 600;
+  }
+  .auth-tab:hover:not(.active) {
+    color: var(--bone);
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .form-group {
+    text-align: left;
+  }
+  .form-group label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--smoke);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-xs);
+  }
+  .form-group input {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--void);
+    border: 1px solid var(--mist);
+    border-radius: 8px;
+    color: var(--parchment);
+    font-size: 1rem;
+    font-family: var(--font-ui);
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+  .form-group input::placeholder {
+    color: var(--smoke);
+  }
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .auth-submit {
+    padding: var(--space-md);
+    background: var(--accent);
+    color: var(--void);
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: var(--space-sm);
+  }
+  .auth-submit:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+  .auth-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .auth-error {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    min-height: 1.2em;
+    margin-top: var(--space-md);
+  }
+</style>

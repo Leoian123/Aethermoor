@@ -6,7 +6,7 @@ import Header from '../components/ui/Header.astro';
 
 <Layout title="STATISFY RPG - Scheda">
   <div class="sheet-page">
-    <Header showBackButton />
+    <Header showBackButton backHref="/characters" />
     
     <main class="sheet-main">
       <!-- Header personaggio -->
@@ -27,6 +27,15 @@ import Header from '../components/ui/Header.astro';
               <div class="bar-fill" id="mana-bar"></div>
               <span class="bar-text"><span id="mana-current">0</span>/<span id="mana-max">0</span></span>
             </div>
+            <div class="resource-bar xp-bar">
+              <div class="bar-fill" id="xp-bar"></div>
+              <span class="bar-text">XP: <span id="xp-current">0</span>/<span id="xp-next">100</span></span>
+            </div>
+          </div>
+          <div class="char-currency">
+            <span class="currency-icon">🪙</span>
+            <span class="currency-value" id="corone-display">0</span>
+            <span class="currency-label">corone</span>
           </div>
         </div>
       </section>
@@ -36,6 +45,7 @@ import Header from '../components/ui/Header.astro';
         <button class="tab active" data-tab="stats">📊 Statistiche</button>
         <button class="tab" data-tab="skills">⚔️ Abilità</button>
         <button class="tab" data-tab="equipment">🎒 Equipaggiamento</button>
+        <button class="tab" data-tab="journal">📜 Diario</button>
       </nav>
       
       <!-- Panel: Statistiche -->
@@ -79,13 +89,36 @@ import Header from '../components/ui/Header.astro';
           </div>
         </div>
         
+        <!-- Investimento punti (visibile solo se ci sono punti da investire) -->
+        <div class="invest-section" id="invest-section" style="display:none">
+          <h3 class="section-label">Punti da Investire: <span id="invest-available" class="invest-badge">0</span></h3>
+          <div class="invest-grid">
+            <div class="invest-row"><span>STR</span><button class="invest-btn" data-stat="str">+1</button><span class="invest-count" id="invest-str">0</span></div>
+            <div class="invest-row"><span>DEX</span><button class="invest-btn" data-stat="dex">+1</button><span class="invest-count" id="invest-dex">0</span></div>
+            <div class="invest-row"><span>VIT</span><button class="invest-btn" data-stat="vit">+1</button><span class="invest-count" id="invest-vit">0</span></div>
+            <div class="invest-row"><span>INT</span><button class="invest-btn" data-stat="int">+1</button><span class="invest-count" id="invest-int">0</span></div>
+          </div>
+          <div class="invest-actions">
+            <button class="invest-confirm" id="invest-confirm" disabled>Conferma</button>
+            <button class="invest-reset" id="invest-reset">Reset</button>
+          </div>
+        </div>
+
         <div class="derived-stats">
           <h3 class="section-label">Statistiche Derivate</h3>
           <div class="derived-grid">
-            <div class="derived-item"><span class="derived-label">Danno Fisico</span><span class="derived-value" id="derived-phys">+0%</span></div>
-            <div class="derived-item"><span class="derived-label">Potere Magico</span><span class="derived-value" id="derived-magic">+0%</span></div>
+            <div class="derived-item"><span class="derived-label">Danno Fisico</span><span class="derived-value" id="derived-phys">x1.0</span></div>
+            <div class="derived-item"><span class="derived-label">Danno Magico</span><span class="derived-value" id="derived-magic">x1.0</span></div>
+            <div class="derived-item"><span class="derived-label">Precisione</span><span class="derived-value" id="derived-prec">60%</span></div>
             <div class="derived-item"><span class="derived-label">Evasione</span><span class="derived-value" id="derived-eva">0%</span></div>
-            <div class="derived-item"><span class="derived-label">Regen HP</span><span class="derived-value" id="derived-regen">0/turno</span></div>
+            <div class="derived-item"><span class="derived-label">Attacchi/Turno</span><span class="derived-value" id="derived-apt">1.0</span></div>
+            <div class="derived-item"><span class="derived-label">Velocita'</span><span class="derived-value" id="derived-speed">100%</span></div>
+            <div class="derived-item"><span class="derived-label">Carico Max</span><span class="derived-value" id="derived-carry">50kg</span></div>
+            <div class="derived-item"><span class="derived-label">Regen HP</span><span class="derived-value" id="derived-regen">0/min</span></div>
+            <div class="derived-item"><span class="derived-label">Res. Veleni</span><span class="derived-value" id="derived-poison">0%</span></div>
+            <div class="derived-item"><span class="derived-label">Res. Elementi</span><span class="derived-value" id="derived-element">0%</span></div>
+            <div class="derived-item"><span class="derived-label">Bonus EXP</span><span class="derived-value" id="derived-xp">0%</span></div>
+            <div class="derived-item"><span class="derived-label">Bonus Craft</span><span class="derived-value" id="derived-craft">0%</span></div>
           </div>
         </div>
       </section>
@@ -110,40 +143,96 @@ import Header from '../components/ui/Header.astro';
       <!-- Panel: Equipaggiamento -->
       <section class="panel" id="panel-equipment">
         <div class="equip-layout">
-          <!-- Equipment Slots -->
+          <!-- Paper Doll: 12 slot attorno alla silhouette -->
           <div class="equipment-side">
             <h3 class="section-label">Equipaggiamento</h3>
-            <div class="equipment-slots">
-              <div class="equip-slot" data-slot="main_hand">
-                <span class="slot-label">Mano Principale</span>
-                <div class="slot-drop-area" id="slot-main_hand"></div>
+            <div class="paper-doll">
+              <!-- Silhouette decorativa -->
+              <div class="doll-silhouette" aria-hidden="true"></div>
+
+              <!-- Riga 1: Testa -->
+              <div class="equip-slot doll-head" data-slot="head">
+                <span class="slot-label">Testa</span>
+                <div class="slot-drop-area" id="slot-head"></div>
               </div>
-              <div class="equip-slot" data-slot="off_hand">
-                <span class="slot-label">Mano Secondaria</span>
-                <div class="slot-drop-area" id="slot-off_hand"></div>
+
+              <!-- Riga 2: Schiena - Collo - Spalle -->
+              <div class="equip-slot doll-back" data-slot="back">
+                <span class="slot-label">Schiena</span>
+                <div class="slot-drop-area" id="slot-back"></div>
               </div>
-              <div class="equip-slot" data-slot="two_hand">
-                <span class="slot-label">Due Mani</span>
-                <div class="slot-drop-area" id="slot-two_hand"></div>
-              </div>
-              <div class="equip-slot" data-slot="chest">
-                <span class="slot-label">Armatura</span>
-                <div class="slot-drop-area" id="slot-chest"></div>
-              </div>
-              <div class="equip-slot" data-slot="neck">
-                <span class="slot-label">Collana</span>
+              <div class="equip-slot doll-neck" data-slot="neck">
+                <span class="slot-label">Collo</span>
                 <div class="slot-drop-area" id="slot-neck"></div>
               </div>
-              <div class="equip-slot" data-slot="belt">
+              <div class="equip-slot doll-shoulders" data-slot="shoulders">
+                <span class="slot-label">Spalle</span>
+                <div class="slot-drop-area" id="slot-shoulders"></div>
+              </div>
+
+              <!-- Riga 3: Mano Px - Petto - Mano Sx -->
+              <div class="equip-slot doll-main-hand" data-slot="main_hand">
+                <span class="slot-label">Mano Px</span>
+                <div class="slot-drop-area" id="slot-main_hand"></div>
+              </div>
+              <div class="equip-slot doll-chest" data-slot="chest">
+                <span class="slot-label">Petto</span>
+                <div class="slot-drop-area" id="slot-chest"></div>
+              </div>
+              <div class="equip-slot doll-off-hand" data-slot="off_hand">
+                <span class="slot-label">Mano Sx</span>
+                <div class="slot-drop-area" id="slot-off_hand"></div>
+              </div>
+
+              <!-- Riga 4: Cintura -->
+              <div class="equip-slot doll-belt" data-slot="belt">
                 <span class="slot-label">Cintura</span>
                 <div class="slot-drop-area" id="slot-belt"></div>
               </div>
+
+              <!-- Riga 5: Anello - Guanti -->
+              <div class="equip-slot doll-ring" data-slot="ring">
+                <span class="slot-label">Anello</span>
+                <div class="slot-drop-area" id="slot-ring"></div>
+              </div>
+              <div class="equip-slot doll-gloves" data-slot="gloves">
+                <span class="slot-label">Guanti</span>
+                <div class="slot-drop-area" id="slot-gloves"></div>
+              </div>
+
+              <!-- Riga 6: Gambe -->
+              <div class="equip-slot doll-legs" data-slot="legs">
+                <span class="slot-label">Gambe</span>
+                <div class="slot-drop-area" id="slot-legs"></div>
+              </div>
+
+              <!-- Riga 7: Piedi -->
+              <div class="equip-slot doll-feet" data-slot="feet">
+                <span class="slot-label">Piedi</span>
+                <div class="slot-drop-area" id="slot-feet"></div>
+              </div>
             </div>
           </div>
-          
+
           <!-- Inventario -->
           <div class="inventory-side">
-            <h3 class="section-label">Inventario <small>(trascina sugli slot)</small></h3>
+            <div class="inv-header">
+              <h3 class="section-label">Inventario</h3>
+              <span class="inv-capacity" id="inv-capacity">0/32</span>
+            </div>
+            <div class="inv-toolbar">
+              <div class="inv-tabs">
+                <button class="inv-tab active" data-filter="all">Tutti</button>
+                <button class="inv-tab" data-filter="equipment">Equip</button>
+                <button class="inv-tab" data-filter="consumable">Consumo</button>
+              </div>
+              <select class="inv-sort" id="inv-sort">
+                <option value="name">Nome</option>
+                <option value="rarity">Rarit&agrave;</option>
+                <option value="type">Tipo</option>
+                <option value="level">Livello</option>
+              </select>
+            </div>
             <div class="inventory-drop-zone" id="inventory-drop-zone">
               <div class="inventory-grid" id="inventory-grid"></div>
               <p class="empty-msg" id="inv-empty">Inventario vuoto</p>
@@ -151,456 +240,175 @@ import Header from '../components/ui/Header.astro';
           </div>
         </div>
       </section>
+
+      <!-- Panel: Diario / Quest Log -->
+      <section class="panel" id="panel-journal">
+        <div class="journal-layout">
+          <!-- Sidebar: lista quest -->
+          <aside class="journal-sidebar">
+            <div class="journal-section">
+              <h3 class="section-label">Quest Attive</h3>
+              <div class="quest-list" id="quest-list-active">
+                <p class="empty-msg" id="quest-empty-active">Nessuna quest attiva</p>
+              </div>
+            </div>
+            <div class="journal-section">
+              <h3 class="section-label">Storico</h3>
+              <div class="quest-list" id="quest-list-history">
+                <p class="empty-msg" id="quest-empty-history">Nessuna quest completata</p>
+              </div>
+            </div>
+            <div class="journal-section">
+              <h3 class="section-label">Note Personali</h3>
+              <button class="btn-add-note" id="btn-add-note">+ Nuova Nota</button>
+              <div class="notes-list" id="journal-notes-list"></div>
+            </div>
+          </aside>
+
+          <!-- Detail panel -->
+          <div class="journal-detail" id="journal-detail">
+            <div class="journal-empty-state" id="journal-empty-state">
+              <div class="journal-empty-icon">📜</div>
+              <h2>Il Tuo Diario</h2>
+              <p>Seleziona una quest dalla lista per vedere i dettagli, oppure crea una nota personale.</p>
+            </div>
+            <div class="quest-detail-view" id="quest-detail-view" style="display:none">
+              <div class="quest-detail-header">
+                <h2 class="quest-detail-name" id="quest-detail-name"></h2>
+                <div class="quest-detail-badges">
+                  <span class="quest-badge rarity-badge" id="quest-detail-rarity"></span>
+                  <span class="quest-badge scope-badge" id="quest-detail-scope"></span>
+                  <span class="quest-badge status-badge" id="quest-detail-status"></span>
+                </div>
+              </div>
+              <div class="quest-detail-body">
+                <div class="quest-objectives" id="quest-detail-objectives"></div>
+                <div class="quest-rewards" id="quest-detail-rewards"></div>
+                <div class="quest-dates" id="quest-detail-dates"></div>
+              </div>
+              <div class="quest-notes-section">
+                <h3 class="section-label">Le Tue Note</h3>
+                <textarea class="quest-notes-textarea" id="quest-notes-textarea" placeholder="Scrivi qui le tue considerazioni su questa quest..." rows="5"></textarea>
+                <div class="quest-notes-status" id="quest-notes-status"></div>
+              </div>
+            </div>
+            <div class="note-detail-view" id="note-detail-view" style="display:none">
+              <textarea class="journal-note-textarea" id="journal-note-textarea" placeholder="Scrivi qui i tuoi appunti..." rows="12"></textarea>
+              <div class="note-actions">
+                <span class="note-save-status" id="note-save-status"></span>
+                <button class="btn-delete-note" id="btn-delete-note">Elimina</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
-    
+
     <!-- Tooltip -->
     <div class="tooltip" id="tooltip"></div>
   </div>
 </Layout>
 
 <script>
-  import { getCharacterBySlot, equipItem as apiEquip, unequipItem as apiUnequip, moveEquipment as apiMove } from '../lib/api.js';
-  
+  import { requireAuth } from '../lib/auth.js';
+  import { getCharacterBySlot, equipItem as apiEquip, unequipItem as apiUnequip, moveEquipment as apiMove, useItem as apiUseItem, removeFromInventory as apiDiscard, investStats, getCharacterQuests, updateQuestNotes, getJournalNotes, saveJournalNote as apiSaveJournalNote, deleteJournalNote as apiDeleteJournalNote } from '../lib/api.js';
+  import { initSheetRenderer } from '../lib/sheetRenderer.js';
+  import { initEquipmentManager } from '../lib/equipmentManager.js';
+  import { initJournalManager } from '../lib/journalManager.js';
+
+  // Auth guard
+  if (!requireAuth()) { /* redirecting */ }
+
   let character = null;
-  let draggedItem = null;
-  const tooltip = document.getElementById('tooltip');
-  
+  const tooltipEl = document.getElementById('tooltip');
+
   const urlParams = new URLSearchParams(window.location.search);
   const slot = parseInt(urlParams.get('slot') || sessionStorage.getItem('currentSlot') || '0');
   sessionStorage.setItem('currentSlot', slot.toString());
-  
-  const SLOT_LABELS = {
-    main_hand: 'Mano Principale',
-    off_hand: 'Mano Secondaria', 
-    two_hand: 'Due Mani',
-    chest: 'Armatura',
-    neck: 'Collana',
-    belt: 'Cintura'
-  };
-  
-  // ══════════════════════════════════════════════════════
-  // INIT
-  // ══════════════════════════════════════════════════════
-  
-  async function init() {
-    try {
-      const result = await getCharacterBySlot(slot);
-      if (!result.exists) {
-        window.location.href = '/';
-        return;
-      }
-      character = result.character;
-      render();
-    } catch (e) {
-      console.error('Errore:', e);
-      window.location.href = '/';
-    }
-  }
-  
-  function render() {
-    renderHeader();
-    renderStats();
-    renderSkills();
-    renderEquipment();
-    renderInventory();
-  }
-  
-  // ══════════════════════════════════════════════════════
-  // HEADER
-  // ══════════════════════════════════════════════════════
-  
-  function renderHeader() {
-    document.getElementById('char-name').textContent = character.name;
-    document.getElementById('char-class').textContent = character.class?.name || '—';
-    document.getElementById('char-level').textContent = character.level;
-    
-    document.getElementById('hp-current').textContent = character.hp_current;
-    document.getElementById('hp-max').textContent = character.hp_max;
-    document.getElementById('hp-bar').style.width = `${(character.hp_current / character.hp_max) * 100}%`;
-    
-    document.getElementById('mana-current').textContent = character.mana_current;
-    document.getElementById('mana-max').textContent = character.mana_max;
-    document.getElementById('mana-bar').style.width = `${(character.mana_current / character.mana_max) * 100}%`;
-  }
-  
-  // ══════════════════════════════════════════════════════
-  // STATS
-  // ══════════════════════════════════════════════════════
-  
-  function renderStats() {
-    const bonuses = calculateBonuses();
-    
-    ['str', 'dex', 'vit', 'int'].forEach(stat => {
-      const base = character[stat] || 10;
-      const bonus = bonuses[stat] || 0;
-      
-      document.getElementById(`base-${stat}`).textContent = base;
-      document.getElementById(`total-${stat}`).textContent = base + bonus;
-      
-      const modEl = document.getElementById(`mod-${stat}`);
-      if (bonus !== 0) {
-        modEl.textContent = bonus > 0 ? `+${bonus}` : bonus;
-        modEl.className = `stat-mod ${bonus > 0 ? 'buff' : 'debuff'}`;
-      } else {
-        modEl.textContent = '';
-      }
-    });
-    
-    const totalStr = (character.str || 10) + (bonuses.str || 0);
-    const totalDex = (character.dex || 10) + (bonuses.dex || 0);
-    const totalVit = (character.vit || 10) + (bonuses.vit || 0);
-    const totalInt = (character.int || 10) + (bonuses.int || 0);
-    
-    document.getElementById('derived-phys').textContent = `+${totalStr}%`;
-    document.getElementById('derived-magic').textContent = `+${Math.floor(totalInt * 1.25)}%`;
-    document.getElementById('derived-eva').textContent = `${Math.floor(totalDex / 2)}%`;
-    document.getElementById('derived-regen').textContent = `${Math.floor(totalVit / 10)}/turno`;
-  }
-  
-  function calculateBonuses() {
-    const bonuses = { str: 0, dex: 0, vit: 0, int: 0 };
-    if (character.equipment) {
-      character.equipment.forEach(item => {
-        if (item.stats_bonus) {
-          for (const [stat, val] of Object.entries(item.stats_bonus)) {
-            if (bonuses[stat] !== undefined) bonuses[stat] += val;
-          }
-        }
-      });
-    }
-    return bonuses;
-  }
-  
-  // ══════════════════════════════════════════════════════
-  // SKILLS
-  // ══════════════════════════════════════════════════════
-  
-  function renderSkills() {
-    if (!character.skills?.length) {
-      document.getElementById('skills-empty').style.display = 'block';
-      return;
-    }
-    document.getElementById('skills-empty').style.display = 'none';
-    
-    const spheres = character.skills.filter(s => s.category === 'sphere');
-    const martial = character.skills.filter(s => s.category === 'martial');
-    const knowledge = character.skills.filter(s => s.category === 'knowledge');
-    
-    document.getElementById('skills-spheres').innerHTML = spheres.map(createSkillCard).join('');
-    document.getElementById('skills-martial').innerHTML = martial.map(createSkillCard).join('');
-    document.getElementById('skills-knowledge').innerHTML = knowledge.map(createSkillCard).join('');
-    
-    document.querySelectorAll('.skill-card').forEach(card => {
-      card.addEventListener('mouseenter', showSkillTooltip);
-      card.addEventListener('mousemove', moveTooltip);
-      card.addEventListener('mouseleave', hideTooltip);
-    });
-  }
-  
-  function createSkillCard(skill) {
-    const color = getSkillColor(skill.tag);
-    const icon = getSkillIcon(skill);
-    return `
-      <div class="skill-card ${skill.type}" style="--skill-color: ${color}" data-skill='${JSON.stringify(skill).replace(/'/g, "&#39;")}'>
-        <div class="skill-icon-wrap">
-          <span class="skill-icon">${icon}</span>
-          <span class="skill-mastery">${skill.mastery}</span>
-        </div>
-        <div class="skill-info">
-          <span class="skill-name">${skill.name}</span>
-          <span class="skill-type-label">${skill.type === 'active' ? 'Attiva' : 'Passiva'}</span>
-        </div>
-      </div>
-    `;
-  }
-  
-  function getSkillIcon(skill) {
-    const icons = { 'IGNIS': '🔥', 'AQUA': '💧', 'TERRA': '🪨', 'VENTUS': '💨', 'MENS': '🧿', 'ANIMA': '👻', 'VIS': '⚡', 'VITA': '💚', 'SPATIUM': '🌀', 'TEMPUS': '⏳', 'SWORD': '⚔️', 'DAGGER': '🗡️', 'SHIELD': '🛡️' };
-    for (const [key, icon] of Object.entries(icons)) {
-      if (skill.tag.includes(key)) return icon;
-    }
-    return '✨';
-  }
-  
-  function getSkillColor(tag) {
-    const colors = { 'IGNIS': '#ff6b35', 'AQUA': '#4ecdc4', 'TERRA': '#8b7355', 'VENTUS': '#a8d5e5', 'MENS': '#9b59b6', 'ANIMA': '#1abc9c', 'VIS': '#f1c40f', 'VITA': '#2ecc71', 'SPATIUM': '#3498db', 'TEMPUS': '#e74c3c', 'SWORD': '#e67e22', 'DAGGER': '#c0392b' };
-    for (const [key, color] of Object.entries(colors)) {
-      if (tag.includes(key)) return color;
-    }
-    return '#c9a959';
-  }
-  
-  function showSkillTooltip(e) {
-    const skill = JSON.parse(e.currentTarget.dataset.skill);
-    tooltip.innerHTML = `
-      <div class="tip-header">
-        <span class="tip-name">${skill.name}</span>
-        <span class="tip-type ${skill.type}">${skill.type === 'active' ? 'Attiva' : 'Passiva'}</span>
-      </div>
-      <p class="tip-desc">${skill.description}</p>
-      <div class="tip-mastery">Maestria: ${skill.mastery}/10</div>
-      ${skill.base_cost > 0 ? `<div class="tip-stat">💧 Costo: ${skill.base_cost} mana</div>` : ''}
-      ${skill.cooldown > 0 ? `<div class="tip-stat">⏱️ Cooldown: ${skill.cooldown} turni</div>` : ''}
-      <div class="tip-footer">${skill.tag}</div>
-    `;
-    tooltip.classList.add('visible');
-    moveTooltip(e);
-  }
-  
-  // ══════════════════════════════════════════════════════
-  // EQUIPMENT
-  // ══════════════════════════════════════════════════════
-  
-  function renderEquipment() {
-    // Reset all slots
-    document.querySelectorAll('.slot-drop-area').forEach(el => {
-      el.innerHTML = '<span class="slot-empty">Vuoto</span>';
-      el.parentElement.classList.remove('filled');
-    });
-    
-    if (!character.equipment?.length) return;
-    
-    character.equipment.forEach(item => {
-      const dropArea = document.getElementById(`slot-${item.equipped_slot}`);
-      if (dropArea) {
-        dropArea.innerHTML = createItemCard(item, true);
-        dropArea.parentElement.classList.add('filled');
-        
-        const card = dropArea.querySelector('.item-card');
-        setupItemCardEvents(card, item, true);
-      }
-    });
-  }
-  
-  function renderInventory() {
-    const grid = document.getElementById('inventory-grid');
-    const empty = document.getElementById('inv-empty');
-    
-    if (!character.inventory?.length) {
-      empty.style.display = 'block';
-      grid.innerHTML = '';
-      return;
-    }
-    
-    empty.style.display = 'none';
-    grid.innerHTML = character.inventory.map(item => createItemCard(item, false)).join('');
-    
-    document.querySelectorAll('#inventory-grid .item-card').forEach(card => {
-      const item = JSON.parse(card.dataset.item);
-      setupItemCardEvents(card, item, false);
-    });
-  }
-  
-  function createItemCard(item, equipped) {
-    const rarity = item.rarity || 'common';
-    const icon = getItemIcon(item.type);
-    const tags = item.equip_tags || [];
-    const tagsDisplay = tags.map(t => SLOT_LABELS[t] || t).join(', ');
-    
-    return `
-      <div class="item-card ${rarity}" 
-           draggable="true" 
-           data-item='${JSON.stringify(item).replace(/'/g, "&#39;")}'
-           data-equipped="${equipped}"
-           data-equip-tags="${tags.join(',')}">
-        <div class="item-icon">${icon}</div>
-        <div class="item-details">
-          <span class="item-name">${item.name || item.item_name}</span>
-          <span class="item-type">${item.type || 'Oggetto'}</span>
-        </div>
-        ${item.quantity > 1 ? `<span class="item-qty">×${item.quantity}</span>` : ''}
-      </div>
-    `;
-  }
-  
-  function getItemIcon(type) {
-    const icons = { weapon: '⚔️', armor: '🛡️', shield: '🛡️', accessory: '💍', consumable: '🧪' };
-    return icons[type] || '📦';
-  }
-  
-  function setupItemCardEvents(card, item, equipped) {
-    // Drag start
-    card.addEventListener('dragstart', (e) => {
-      draggedItem = { item, equipped, element: card };
-      card.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-      
-      // Highlight compatible slots (escludi slot corrente se equipaggiato)
-      const tags = item.equip_tags || [];
-      const currentSlot = equipped ? item.equipped_slot : null;
-      
-      document.querySelectorAll('.equip-slot').forEach(slot => {
-        const slotId = slot.dataset.slot;
-        if (tags.includes(slotId) && slotId !== currentSlot) {
-          slot.classList.add('drop-valid');
-        }
-      });
-      
-      // Se è equipped, highlight anche inventario
-      if (equipped) {
-        document.getElementById('inventory-drop-zone').classList.add('drop-valid');
-      }
-    });
-    
-    card.addEventListener('dragend', () => {
-      card.classList.remove('dragging');
-      document.querySelectorAll('.drop-valid, .drop-over').forEach(el => {
-        el.classList.remove('drop-valid', 'drop-over');
-      });
-      draggedItem = null;
-    });
-    
-    // Tooltip
-    card.addEventListener('mouseenter', showItemTooltip);
-    card.addEventListener('mousemove', moveTooltip);
-    card.addEventListener('mouseleave', hideTooltip);
-  }
-  
-  function showItemTooltip(e) {
-    const item = JSON.parse(e.currentTarget.dataset.item);
-    const tags = item.equip_tags || [];
-    const slotsText = tags.map(t => SLOT_LABELS[t] || t).join(', ');
-    
-    let bonusHtml = '';
-    if (item.stats_bonus) {
-      bonusHtml = Object.entries(item.stats_bonus)
-        .map(([stat, val]) => `<div class="tip-stat bonus">+${val} ${stat.toUpperCase()}</div>`)
-        .join('');
-    }
-    
-    tooltip.innerHTML = `
-      <div class="tip-header">
-        <span class="tip-name">${item.name || item.item_name}</span>
-        <span class="tip-rarity ${item.rarity || 'common'}">${item.rarity || 'common'}</span>
-      </div>
-      <div class="tip-item-type">${item.type || 'Oggetto'}</div>
-      ${item.description ? `<p class="tip-desc">${item.description}</p>` : ''}
-      ${bonusHtml}
-      <div class="tip-slots">Slot: ${slotsText}</div>
-    `;
-    tooltip.classList.add('visible');
-    moveTooltip(e);
-  }
-  
-  // ══════════════════════════════════════════════════════
-  // DRAG & DROP
-  // ══════════════════════════════════════════════════════
-  
-  // Setup drop zones for equipment slots
-  document.querySelectorAll('.slot-drop-area').forEach(dropArea => {
-    const slotEl = dropArea.parentElement;
-    const slotId = slotEl.dataset.slot;
-    
-    dropArea.addEventListener('dragover', (e) => {
-      if (!draggedItem) return;
-      const tags = draggedItem.item.equip_tags || [];
-      const currentSlot = draggedItem.equipped ? draggedItem.item.equipped_slot : null;
-      
-      // Permetti drop solo su slot compatibili e diversi da quello corrente
-      if (tags.includes(slotId) && slotId !== currentSlot) {
-        e.preventDefault();
-        slotEl.classList.add('drop-over');
-      }
-    });
-    
-    dropArea.addEventListener('dragleave', () => {
-      slotEl.classList.remove('drop-over');
-    });
-    
-    dropArea.addEventListener('drop', async (e) => {
-      e.preventDefault();
-      slotEl.classList.remove('drop-over');
-      
-      if (!draggedItem) return;
-      const { item, equipped } = draggedItem;
-      
-      try {
-        let result;
-        if (equipped) {
-          // Spostamento diretto tra slot
-          result = await apiMove(character.id, item.equipped_slot, slotId);
-        } else {
-          // Equip da inventario
-          result = await apiEquip(character.id, item.item_name, slotId);
-        }
-        
-        if (result.success) {
-          await refreshCharacter();
-        }
-      } catch (err) {
-        console.error('Equip/Move error:', err);
-      }
-    });
-  });
-  
-  // Setup drop zone for inventory (unequip)
-  const invDropZone = document.getElementById('inventory-drop-zone');
-  
-  invDropZone.addEventListener('dragover', (e) => {
-    if (draggedItem?.equipped) {
-      e.preventDefault();
-      invDropZone.classList.add('drop-over');
-    }
-  });
-  
-  invDropZone.addEventListener('dragleave', () => {
-    invDropZone.classList.remove('drop-over');
-  });
-  
-  invDropZone.addEventListener('drop', async (e) => {
-    e.preventDefault();
-    invDropZone.classList.remove('drop-over');
-    
-    if (!draggedItem?.equipped) return;
-    
-    try {
-      const result = await apiUnequip(character.id, draggedItem.item.equipped_slot);
-      if (result.success) {
-        await refreshCharacter();
-      }
-    } catch (err) {
-      console.error('Unequip error:', err);
-    }
-  });
-  
-  async function refreshCharacter() {
-    const result = await getCharacterBySlot(slot);
-    character = result.character;
-    render();
-  }
-  
-  // ══════════════════════════════════════════════════════
-  // TOOLTIP
-  // ══════════════════════════════════════════════════════
-  
+
+  // ── Shared tooltip helpers ──
   function moveTooltip(e) {
     let x = e.clientX + 15;
     let y = e.clientY + 15;
-    const rect = tooltip.getBoundingClientRect();
+    const rect = tooltipEl.getBoundingClientRect();
     if (x + 220 > window.innerWidth) x = e.clientX - 230;
     if (y + rect.height > window.innerHeight) y = e.clientY - rect.height - 15;
-    tooltip.style.left = `${x}px`;
-    tooltip.style.top = `${y}px`;
+    tooltipEl.style.left = `${x}px`;
+    tooltipEl.style.top = `${y}px`;
   }
-  
+
   function hideTooltip() {
-    tooltip.classList.remove('visible');
+    tooltipEl.classList.remove('visible');
   }
-  
-  // ══════════════════════════════════════════════════════
-  // TABS
-  // ══════════════════════════════════════════════════════
-  
+
+  // ── Shared helpers ──
+  const getCharacter = () => character;
+
+  async function refreshCharacter() {
+    const result = await getCharacterBySlot(slot);
+    character = result.character;
+    sheetRenderer.renderAll();
+    equipmentMgr.render();
+  }
+
+  // ── Initialize modules ──
+  const sheetRenderer = initSheetRenderer({
+    getCharacter, investStats, refreshCharacter, tooltipEl, moveTooltip, hideTooltip,
+  });
+
+  const equipmentMgr = initEquipmentManager({
+    getCharacter, apiEquip, apiUnequip, apiMove, apiUseItem, apiDiscard, refreshCharacter, tooltipEl, moveTooltip, hideTooltip,
+  });
+
+  const journalMgr = initJournalManager({
+    getCharacter, getCharacterQuests, updateQuestNotes, getJournalNotes, apiSaveJournalNote, apiDeleteJournalNote,
+  });
+
+  // ── Tabs ──
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
       tab.classList.add('active');
       document.getElementById(`panel-${tab.dataset.tab}`).classList.add('active');
+      if (tab.dataset.tab === 'journal' && !journalMgr.isLoaded()) {
+        journalMgr.load();
+      }
     });
   });
-  
+
+  const initialTab = urlParams.get('tab');
+  if (initialTab) {
+    const tabBtn = document.querySelector(`.tab[data-tab="${initialTab}"]`);
+    if (tabBtn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      tabBtn.classList.add('active');
+      document.getElementById(`panel-${initialTab}`).classList.add('active');
+    }
+  }
+
+  // ── Init ──
+  async function init() {
+    try {
+      const result = await getCharacterBySlot(slot);
+      if (!result.exists) { window.location.href = '/home'; return; }
+      character = result.character;
+      sheetRenderer.renderAll();
+      equipmentMgr.render();
+    } catch (e) {
+      console.error('Errore:', e);
+      window.location.href = '/home';
+    }
+  }
+
   init();
+
+  if (initialTab === 'journal') {
+    const waitForCharacter = setInterval(() => {
+      if (character) { clearInterval(waitForCharacter); journalMgr.load(); }
+    }, 100);
+  }
 </script>
 
 <style>
@@ -673,8 +481,25 @@ import Header from '../components/ui/Header.astro';
   .bar-fill { height: 100%; transition: width 0.5s ease; }
   .hp-bar .bar-fill { background: linear-gradient(90deg, #c0392b, #27ae60); }
   .mana-bar .bar-fill { background: linear-gradient(90deg, #2980b9, #9b59b6); }
+  .xp-bar .bar-fill { background: linear-gradient(90deg, #c9a959, #f1c40f); }
   .bar-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-family: var(--font-mono); color: white; text-shadow: 0 1px 2px black; }
-  
+
+  /* Currency */
+  .char-currency {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--shadow);
+    border: 1px solid rgba(218, 165, 32, 0.3);
+    border-radius: 8px;
+    max-width: 160px;
+  }
+  .currency-icon { font-size: 1.1rem; }
+  .currency-value { font-family: var(--font-mono); font-size: 1rem; color: #f1c40f; font-weight: 600; }
+  .currency-label { font-size: 0.7rem; color: var(--smoke); text-transform: uppercase; }
+
   /* Tabs */
   .tabs { display: flex; gap: var(--space-sm); }
   .tab { flex: 1; padding: var(--space-md); background: var(--shadow); border: 1px solid var(--mist); border-radius: 8px; color: var(--ash); font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
@@ -711,6 +536,109 @@ import Header from '../components/ui/Header.astro';
   .derived-item { background: var(--shadow); border-radius: 8px; padding: var(--space-sm); text-align: center; }
   .derived-label { display: block; font-size: 0.65rem; color: var(--smoke); text-transform: uppercase; margin-bottom: 4px; }
   .derived-value { font-family: var(--font-mono); font-size: 1rem; color: var(--accent); }
+
+  /* Invest Section */
+  .invest-section {
+    background: linear-gradient(135deg, rgba(201, 169, 89, 0.08) 0%, var(--shadow) 100%);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+  .invest-section .section-label {
+    border-bottom: none;
+    padding-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  .invest-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    background: var(--accent);
+    color: var(--void);
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    font-family: var(--font-mono);
+  }
+  .invest-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+  @media (max-width: 500px) { .invest-grid { grid-template-columns: repeat(2, 1fr); } }
+  .invest-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    background: var(--void);
+    border: 1px solid var(--mist);
+    border-radius: 8px;
+    padding: var(--space-sm) var(--space-md);
+  }
+  .invest-row span:first-child {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--parchment);
+    min-width: 30px;
+  }
+  .invest-btn {
+    padding: 4px 12px;
+    background: var(--accent);
+    color: var(--void);
+    border: none;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .invest-btn:hover:not(:disabled) { background: var(--parchment); transform: scale(1.05); }
+  .invest-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .invest-count {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--vita);
+    min-width: 24px;
+    text-align: center;
+  }
+  .invest-actions {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+  }
+  .invest-confirm {
+    padding: var(--space-sm) var(--space-lg);
+    background: var(--vita);
+    color: var(--void);
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .invest-confirm:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+  .invest-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+  .invest-reset {
+    padding: var(--space-sm) var(--space-lg);
+    background: transparent;
+    border: 1px solid var(--mist);
+    color: var(--ash);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .invest-reset:hover { border-color: var(--smoke); color: var(--bone); }
   
   /* Skills */
   .skills-section { margin-bottom: var(--space-lg); }
@@ -730,24 +658,161 @@ import Header from '../components/ui/Header.astro';
   /* Equipment Layout */
   .equip-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); }
   @media (max-width: 700px) { .equip-layout { grid-template-columns: 1fr; } }
-  
-  .equipment-slots { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-sm); }
-  
-  .equip-slot { background: var(--shadow); border: 2px dashed var(--mist); border-radius: 10px; padding: var(--space-sm); min-height: 90px; transition: all 0.2s; }
+
+  /* Paper Doll: 5 colonne x 7 righe */
+  .paper-doll {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(7, auto);
+    gap: var(--space-xs);
+    position: relative;
+    padding: var(--space-md) 0;
+  }
+
+  /* Silhouette decorativa dietro la griglia */
+  .doll-silhouette {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px; height: 320px;
+    background: linear-gradient(180deg, rgba(218,165,32,0.06) 0%, rgba(218,165,32,0.12) 50%, rgba(218,165,32,0.04) 100%);
+    clip-path: polygon(
+      40% 0%, 60% 0%,
+      62% 8%, 65% 12%, 70% 14%, 72% 18%, 68% 22%,
+      75% 28%, 80% 32%, 78% 38%,
+      65% 36%, 62% 44%, 64% 52%, 62% 60%,
+      68% 68%, 72% 78%, 70% 88%, 65% 100%,
+      35% 100%, 30% 88%, 28% 78%, 32% 68%,
+      38% 60%, 36% 52%, 38% 44%, 35% 36%,
+      22% 38%, 20% 32%, 25% 28%,
+      32% 22%, 28% 18%, 30% 14%, 35% 12%, 38% 8%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Posizionamento slot nella griglia */
+  .doll-head      { grid-column: 3; grid-row: 1; }
+  .doll-back      { grid-column: 1; grid-row: 2; }
+  .doll-neck      { grid-column: 3; grid-row: 2; }
+  .doll-shoulders { grid-column: 5; grid-row: 2; }
+  .doll-main-hand { grid-column: 1; grid-row: 3; }
+  .doll-chest     { grid-column: 3; grid-row: 3; }
+  .doll-off-hand  { grid-column: 5; grid-row: 3; }
+  .doll-belt      { grid-column: 3; grid-row: 4; }
+  .doll-ring      { grid-column: 1; grid-row: 5; }
+  .doll-gloves    { grid-column: 5; grid-row: 5; }
+  .doll-legs      { grid-column: 3; grid-row: 6; }
+  .doll-feet      { grid-column: 3; grid-row: 7; }
+
+  .equip-slot {
+    background: var(--shadow);
+    border: 2px dashed var(--mist);
+    border-radius: 10px;
+    padding: var(--space-xs);
+    min-height: 80px;
+    transition: all 0.2s;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
   .equip-slot.filled { border-style: solid; border-color: var(--accent); }
   .equip-slot.drop-valid { border-color: var(--vita); background: rgba(39, 174, 96, 0.1); }
   .equip-slot.drop-over { border-color: var(--vita); background: rgba(39, 174, 96, 0.25); transform: scale(1.02); }
-  
-  .slot-label { display: block; font-size: 0.6rem; text-transform: uppercase; color: var(--smoke); margin-bottom: var(--space-xs); }
-  .slot-drop-area { min-height: 60px; display: flex; align-items: center; justify-content: center; }
-  .slot-empty { font-size: 0.8rem; color: var(--smoke); font-style: italic; }
+
+  /* Two-hand lock: off_hand bloccata */
+  .equip-slot.locked {
+    border-color: var(--smoke);
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .equip-slot.locked .slot-label { color: var(--smoke); }
+  .slot-lock-icon {
+    font-size: 1.2rem;
+    color: var(--smoke);
+    margin-top: var(--space-xs);
+  }
+  .slot-lock-text {
+    font-size: 0.55rem;
+    color: var(--smoke);
+    font-style: italic;
+    text-align: center;
+  }
+
+  .slot-label { display: block; font-size: 0.55rem; text-transform: uppercase; color: var(--smoke); margin-bottom: 2px; letter-spacing: 0.5px; text-align: center; }
+  .slot-drop-area { min-height: 50px; display: flex; align-items: center; justify-content: center; width: 100%; }
+  .slot-empty { font-size: 0.7rem; color: var(--smoke); font-style: italic; }
+  .slot-icon { font-size: 1rem; color: var(--mist); display: block; text-align: center; margin-bottom: 2px; }
+
+  /* Mobile: paper doll compatto 3 colonne */
+  @media (max-width: 700px) {
+    .paper-doll {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(6, auto);
+    }
+    .doll-silhouette { display: none; }
+    .doll-head      { grid-column: 2; grid-row: 1; }
+    .doll-back      { grid-column: 1; grid-row: 2; }
+    .doll-neck      { grid-column: 2; grid-row: 2; }
+    .doll-shoulders { grid-column: 3; grid-row: 2; }
+    .doll-main-hand { grid-column: 1; grid-row: 3; }
+    .doll-chest     { grid-column: 2; grid-row: 3; }
+    .doll-off-hand  { grid-column: 3; grid-row: 3; }
+    .doll-belt      { grid-column: 2; grid-row: 4; }
+    .doll-ring      { grid-column: 1; grid-row: 4; }
+    .doll-gloves    { grid-column: 3; grid-row: 4; }
+    .doll-legs      { grid-column: 2; grid-row: 5; }
+    .doll-feet      { grid-column: 2; grid-row: 6; }
+  }
   
   /* Inventory */
+  /* Inventory Header */
+  .inv-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xs); }
+  .inv-capacity { font-family: var(--font-mono); font-size: 0.7rem; color: var(--smoke); background: var(--void); padding: 2px 8px; border-radius: 4px; }
+
+  /* Inventory Toolbar */
+  .inv-toolbar { display: flex; justify-content: space-between; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }
+  .inv-tabs { display: flex; gap: 2px; }
+  .inv-tab {
+    padding: 4px 10px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    background: var(--void);
+    border: 1px solid var(--mist);
+    border-radius: 4px;
+    color: var(--smoke);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .inv-tab:hover { border-color: var(--accent); color: var(--bone); }
+  .inv-tab.active { background: rgba(218, 165, 32, 0.15); border-color: var(--accent); color: var(--accent); }
+  .inv-sort {
+    padding: 4px 8px;
+    font-size: 0.65rem;
+    background: var(--void);
+    border: 1px solid var(--mist);
+    border-radius: 4px;
+    color: var(--bone);
+    cursor: pointer;
+  }
+
   .inventory-drop-zone { min-height: 200px; border: 2px dashed transparent; border-radius: 10px; padding: var(--space-sm); transition: all 0.2s; }
   .inventory-drop-zone.drop-valid { border-color: var(--vita); background: rgba(39, 174, 96, 0.05); }
   .inventory-drop-zone.drop-over { border-color: var(--vita); background: rgba(39, 174, 96, 0.15); }
-  
+
   .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-sm); }
+
+  /* Slot vuoti nella griglia */
+  .inv-slot-empty {
+    min-height: 60px;
+    background: var(--shadow);
+    border: 1px dashed var(--mist);
+    border-radius: 8px;
+    opacity: 0.3;
+  }
   
   /* Item Cards */
   .item-card { display: flex; align-items: center; gap: var(--space-sm); background: linear-gradient(135deg, var(--shadow) 0%, var(--void) 100%); border: 2px solid var(--mist); border-radius: 10px; padding: var(--space-sm); cursor: grab; transition: all 0.2s; user-select: none; }
@@ -765,6 +830,28 @@ import Header from '../components/ui/Header.astro';
   .item-name { font-size: 0.75rem; font-weight: 500; color: var(--bone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .item-type { font-size: 0.6rem; color: var(--smoke); text-transform: capitalize; }
   .item-qty { font-size: 0.6rem; font-family: var(--font-mono); color: var(--accent); background: var(--void); padding: 2px 5px; border-radius: 4px; }
+
+  /* Item card compatte dentro paper doll */
+  .paper-doll .item-card {
+    flex-direction: column;
+    padding: 4px;
+    gap: 2px;
+    text-align: center;
+    min-width: 0;
+  }
+  .paper-doll .item-icon { width: auto; font-size: 1.2rem; }
+  .paper-doll .item-details { align-items: center; }
+  .paper-doll .item-name { font-size: 0.6rem; white-space: normal; line-height: 1.2; text-align: center; }
+  .paper-doll .item-type { display: none; }
+  .paper-doll .item-qty { font-size: 0.5rem; }
+
+  /* Lock content dentro slot bloccato */
+  .slot-lock-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
   
   /* Tooltip */
   .tooltip { position: fixed; background: var(--void); border: 1px solid var(--accent); border-radius: 10px; padding: var(--space-md); width: 220px; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.15s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -788,4 +875,265 @@ import Header from '../components/ui/Header.astro';
   .tip-stat.bonus { color: var(--vita); }
   .tip-slots { font-size: 0.65rem; color: var(--smoke); margin-top: var(--space-sm); padding-top: var(--space-sm); border-top: 1px solid var(--mist); }
   .tip-footer { margin-top: var(--space-sm); padding-top: var(--space-sm); border-top: 1px solid var(--mist); font-family: var(--font-mono); font-size: 0.55rem; color: var(--smoke); }
+
+  /* Tooltip: linee combattimento */
+  .tip-combat { font-size: 0.7rem; color: var(--bone); margin-top: 2px; }
+  .tip-meta { font-size: 0.6rem; color: var(--smoke); margin-top: var(--space-xs); font-family: var(--font-mono); }
+
+  /* Tooltip: confronto stats */
+  .tip-comparison { margin-top: var(--space-sm); padding: var(--space-xs) var(--space-sm); background: rgba(0,0,0,0.3); border-radius: 6px; border-left: 3px solid var(--accent); }
+  .tip-comp-label { font-size: 0.6rem; color: var(--smoke); text-transform: uppercase; margin-bottom: 2px; }
+  .tip-comp-stat { display: inline-block; font-size: 0.7rem; font-weight: 600; margin-right: var(--space-sm); }
+  .tip-comp-stat.stat-up { color: #27ae60; }
+  .tip-comp-stat.stat-down { color: #e74c3c; }
+
+  /* Tooltip: use effect consumabili */
+  .tip-use-effect { font-size: 0.75rem; color: var(--accent); margin-top: var(--space-xs); padding: 3px 0; font-weight: 500; }
+
+  /* Context Menu */
+  .item-context-menu {
+    position: fixed;
+    background: var(--void);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: var(--space-xs) 0;
+    min-width: 180px;
+    z-index: 2000;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  }
+  .ctx-option {
+    padding: var(--space-xs) var(--space-md);
+    font-size: 0.8rem;
+    color: var(--bone);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .ctx-option:hover {
+    background: rgba(218, 165, 32, 0.15);
+    color: var(--parchment);
+  }
+
+  /* Item card consumabile */
+  .item-card.consumable { border-style: dashed; cursor: pointer; }
+  .item-card.consumable:hover { border-color: var(--accent); }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /* JOURNAL / QUEST LOG                                    */
+  /* ═══════════════════════════════════════════════════════ */
+
+  .journal-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: var(--space-lg);
+    min-height: 400px;
+  }
+  @media (max-width: 700px) {
+    .journal-layout { grid-template-columns: 1fr; }
+    .journal-detail { min-height: 300px; }
+  }
+
+  .journal-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    overflow-y: auto;
+    max-height: 600px;
+    padding-right: var(--space-sm);
+  }
+
+  .journal-section { }
+  .journal-section .section-label { font-size: 0.65rem; }
+
+  .btn-add-note {
+    display: block;
+    width: 100%;
+    padding: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    background: transparent;
+    border: 1px dashed var(--accent);
+    border-radius: 8px;
+    color: var(--accent);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-add-note:hover { background: rgba(201, 169, 89, 0.1); border-style: solid; }
+
+  /* Quest cards */
+  .quest-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--shadow);
+    border-left: 3px solid var(--quest-color, var(--mist));
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: var(--space-xs);
+  }
+  .quest-card:hover { background: var(--void); transform: translateX(3px); }
+  .quest-card.selected { background: rgba(201, 169, 89, 0.12); border-left-color: var(--accent); }
+
+  .quest-card-icon { font-size: 1rem; flex-shrink: 0; }
+  .quest-card-info { display: flex; flex-direction: column; min-width: 0; }
+  .quest-card-name { font-size: 0.8rem; color: var(--bone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .quest-card-progress { font-size: 0.65rem; color: var(--smoke); font-family: var(--font-mono); }
+
+  /* Note cards */
+  .note-card {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-sm);
+    background: var(--shadow);
+    border-left: 3px solid var(--mist);
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: var(--space-xs);
+  }
+  .note-card:hover { background: var(--void); }
+  .note-card.selected { background: rgba(201, 169, 89, 0.12); border-left-color: var(--accent); }
+  .note-card-preview { font-size: 0.75rem; color: var(--bone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .note-card-date { font-size: 0.6rem; color: var(--smoke); font-family: var(--font-mono); }
+
+  /* Detail panel */
+  .journal-detail {
+    background: var(--shadow);
+    border: 1px solid var(--mist);
+    border-radius: 10px;
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .journal-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    text-align: center;
+    color: var(--smoke);
+    gap: var(--space-md);
+  }
+  .journal-empty-icon { font-size: 3rem; opacity: 0.4; }
+  .journal-empty-state h2 { font-family: var(--font-narrative); color: var(--ash); margin: 0; font-size: 1.2rem; }
+  .journal-empty-state p { font-size: 0.8rem; max-width: 250px; }
+
+  /* Quest detail view */
+  .quest-detail-view { display: flex; flex-direction: column; gap: var(--space-md); }
+
+  .quest-detail-header { margin-bottom: var(--space-sm); }
+  .quest-detail-name { font-family: var(--font-narrative); font-size: 1.4rem; color: var(--parchment); margin: 0 0 var(--space-sm); }
+  .quest-detail-badges { display: flex; gap: var(--space-sm); flex-wrap: wrap; }
+
+  .quest-badge {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .rarity-badge { color: #fff; }
+  .scope-badge { background: var(--void); color: var(--ash); border: 1px solid var(--mist); }
+  .status-badge { background: var(--void); }
+  .status-active { color: #f39c12; border: 1px solid #f39c12; }
+  .status-completed { color: #2ecc71; border: 1px solid #2ecc71; }
+  .status-failed { color: #e74c3c; border: 1px solid #e74c3c; }
+
+  /* Objectives */
+  .objective-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .objective-item.done { opacity: 0.6; }
+  .obj-check { font-size: 1rem; flex-shrink: 0; line-height: 1; }
+  .objective-item.done .obj-check { color: #2ecc71; }
+  .obj-text { font-size: 0.85rem; color: var(--bone); font-family: var(--font-narrative); line-height: 1.4; flex: 1; }
+  .objective-item.done .obj-text { text-decoration: line-through; color: var(--smoke); }
+
+  .obj-progress-bar {
+    position: relative;
+    width: 80px;
+    height: 16px;
+    background: var(--void);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .obj-progress-fill { height: 100%; background: linear-gradient(90deg, #c9a959, #f1c40f); border-radius: 8px; transition: width 0.3s; }
+  .obj-progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; font-family: var(--font-mono); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+
+  /* Rewards */
+  .rewards-grid { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+  .reward-chip {
+    font-size: 0.75rem;
+    padding: var(--space-xs) var(--space-sm);
+    background: rgba(201, 169, 89, 0.1);
+    border: 1px solid rgba(201, 169, 89, 0.25);
+    border-radius: 6px;
+    color: var(--parchment);
+  }
+
+  /* Dates */
+  .quest-dates-grid { display: flex; gap: var(--space-lg); flex-wrap: wrap; margin-top: var(--space-sm); }
+  .quest-date-item { font-size: 0.7rem; color: var(--smoke); font-family: var(--font-mono); }
+
+  /* Quest notes */
+  .quest-notes-section { margin-top: var(--space-md); }
+  .quest-notes-textarea, .journal-note-textarea {
+    width: 100%;
+    min-height: 100px;
+    background: var(--void);
+    border: 1px solid var(--mist);
+    border-radius: 8px;
+    padding: var(--space-md);
+    color: var(--bone);
+    font-family: var(--font-narrative);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+  .quest-notes-textarea:focus, .journal-note-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .quest-notes-status, .note-save-status {
+    font-size: 0.7rem;
+    color: var(--smoke);
+    margin-top: var(--space-xs);
+    min-height: 1em;
+  }
+
+  /* Note detail view */
+  .note-detail-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: var(--space-sm);
+  }
+  .note-detail-view .journal-note-textarea { flex: 1; min-height: 250px; }
+  .note-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .btn-delete-note {
+    padding: var(--space-xs) var(--space-md);
+    background: transparent;
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-delete-note:hover { background: rgba(231, 76, 60, 0.15); }
 </style>

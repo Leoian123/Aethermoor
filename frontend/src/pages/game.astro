@@ -9,22 +9,35 @@ import MiniMap from '../components/map/MiniMap.astro';
 
 <Layout title="STATISFY RPG - Gioco">
   <div class="game-container">
-    <Header showBackButton>
+    <Header showBackButton backHref="/characters?mode=play">
       <div class="header-info">
         <span class="char-name" id="header-name">—</span>
         <span class="char-hp">
           HP: <span id="header-hp">0</span>/<span id="header-hp-max">0</span>
         </span>
+        <span class="char-xp">
+          XP: <span id="header-xp">0</span>/<span id="header-xp-max">100</span>
+          <span class="char-level-badge" id="header-level">Lv.1</span>
+        </span>
       </div>
-      <a href="/sheet" class="btn-sheet" id="btn-sheet">
-        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="1.5" fill="none">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-        </svg>
-        Scheda
-      </a>
+      <div class="header-links">
+        <a href="/sheet" class="btn-sheet" id="btn-sheet">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="1.5" fill="none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          Scheda
+        </a>
+        <a href="/sheet?tab=journal" class="btn-sheet" id="btn-journal">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="1.5" fill="none">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          Diario
+        </a>
+      </div>
     </Header>
     
     <ChatContainer />
@@ -32,419 +45,374 @@ import MiniMap from '../components/map/MiniMap.astro';
   
   <!-- Mini-mappa -->
   <MiniMap />
+
+  <!-- Memo FAB -->
+  <button class="memo-fab" id="memo-fab" title="Appunti rapidi">
+    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+    </svg>
+  </button>
+
+  <!-- Shop Overlay -->
+  <div class="shop-overlay" id="shop-overlay">
+    <div class="shop-modal">
+      <div class="shop-header">
+        <div class="shop-npc-info">
+          <h3 class="shop-npc-name" id="shop-npc-name">Mercante</h3>
+          <span class="shop-npc-title" id="shop-npc-title"></span>
+        </div>
+        <div class="shop-player-corone">
+          <span>🪙</span>
+          <span id="shop-corone">0</span>
+        </div>
+        <button class="shop-close" id="shop-close">&times;</button>
+      </div>
+      <div class="shop-body">
+        <div class="shop-column">
+          <h4 class="shop-col-title">In Vendita</h4>
+          <div class="shop-items" id="shop-items-list"></div>
+        </div>
+        <div class="shop-column">
+          <h4 class="shop-col-title">Il Tuo Inventario</h4>
+          <div class="shop-items" id="shop-player-items"></div>
+        </div>
+      </div>
+      <div class="shop-footer" id="shop-footer"></div>
+    </div>
+  </div>
+
+  <!-- Memo Popup -->
+  <div class="memo-overlay" id="memo-overlay">
+    <div class="memo-popup" id="memo-popup">
+      <div class="memo-header">
+        <h3>Appunti Rapidi</h3>
+        <button class="memo-close" id="memo-close">&times;</button>
+      </div>
+      <textarea class="memo-textarea" id="memo-textarea" placeholder="Scrivi qui i tuoi appunti temporanei..." rows="8"></textarea>
+      <div class="memo-footer">
+        <span class="memo-status" id="memo-status">Salvato in locale</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Interactions: Vendor Panel -->
+  <div class="qi-panel" id="qi-panel" style="display:none">
+    <button class="qi-header" id="qi-header">
+      <span class="qi-title">Mercanti</span>
+      <svg class="qi-chevron" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </button>
+    <div class="qi-body" id="qi-body"></div>
+  </div>
 </Layout>
 
 <script>
-  import { parseTags, formatTagsForDisplay, stripLocationTags } from '../lib/tagParser.js';
-  import { sendChatMessage, expandMessage, switchLocation, getCharacterBySlot, getCurrentLocation } from '../lib/api.js';
-  
-  // State
+  import { requireAuth } from '../lib/auth.js';
+  import { getCharacterBySlot, getCurrentLocation, getShop, buyFromShop, sellToShop, getNearbyVendors } from '../lib/api.js';
+  import { initChatManager } from '../lib/chatManager.js';
+  import { initMemoManager } from '../lib/memoManager.js';
+
+  // Auth guard
+  if (!requireAuth()) { /* redirecting */ }
+
+  // Shared state
   let character = null;
-  let history = [];
-  let miniMap = null;
   let currentLocationId = '';
-  
-  // DOM
-  const chatMessages = document.getElementById('chat-messages');
-  const chatInput = document.getElementById('chat-input') as HTMLTextAreaElement;
-  const btnSend = document.getElementById('btn-send') as HTMLButtonElement;
-  const typingIndicator = document.getElementById('typing-indicator');
-  
-  // Ottieni slot dalla URL
+  let miniMap = null;
+
+  // Slot e location target dalla URL
   const urlParams = new URLSearchParams(window.location.search);
   const slot = parseInt(urlParams.get('slot') || '0');
-  
-  // Salva slot per la pagina sheet
+  const targetLocation = urlParams.get('location') || '';
   sessionStorage.setItem('currentSlot', slot.toString());
-  
-  // Aggiorna link scheda con slot
-  const sheetLink = document.getElementById('btn-sheet') as HTMLAnchorElement;
-  if (sheetLink) {
-    sheetLink.href = `/sheet?slot=${slot}`;
-  }
-  
-  // ═══════════════════════════════════════
-  // CHAT PERSISTENCE (localStorage)
-  // ═══════════════════════════════════════
-  
-  function getChatStorageKey(): string {
-    if (!character) return '';
-    return `statisfy_chat_${character.id}_${currentLocationId || 'default'}`;
-  }
-  
-  function saveChat(): void {
-    const key = getChatStorageKey();
-    if (!key) return;
-    try {
-      localStorage.setItem(key, JSON.stringify(history));
-    } catch (e) {
-      console.warn('Impossibile salvare chat:', e);
+
+  // Aggiorna link scheda e diario con slot
+  const sheetLink = document.getElementById('btn-sheet');
+  if (sheetLink) sheetLink.href = `/sheet?slot=${slot}`;
+  const journalLink = document.getElementById('btn-journal');
+  if (journalLink) journalLink.href = `/sheet?slot=${slot}&tab=journal`;
+
+  // Back button → mappa invece di characters
+  const backLink = document.querySelector('.header__back');
+  if (backLink) backLink.href = `/map?slot=${slot}`;
+
+  // Inizializza Chat Manager
+  const chat = initChatManager({
+    getCharacter: () => character,
+    setCharacter: (c) => { character = c; },
+    getCurrentLocationId: () => currentLocationId,
+    setCurrentLocationId: (id) => { currentLocationId = id; },
+    onHeaderUpdate: () => updateHeaderInfo(),
+    onMapRefresh: () => { miniMap?.refresh(); refreshVendorPanel(); },
+    chatMessages: document.getElementById('chat-messages'),
+    chatInput: document.getElementById('chat-input'),
+    btnSend: document.getElementById('btn-send'),
+    typingIndicator: document.getElementById('typing-indicator'),
+  });
+
+  // Inizializza Memo Manager
+  initMemoManager({
+    getCharacterId: () => character?.id ?? null,
+    memoFab: document.getElementById('memo-fab'),
+    memoOverlay: document.getElementById('memo-overlay'),
+    memoClose: document.getElementById('memo-close'),
+    memoTextarea: document.getElementById('memo-textarea'),
+    memoStatus: document.getElementById('memo-status'),
+  });
+
+  // ══════════════════════════════════════════════════════
+  // SHOP OVERLAY
+  // ══════════════════════════════════════════════════════
+
+  const shopOverlay = document.getElementById('shop-overlay');
+  const shopClose = document.getElementById('shop-close');
+  let currentShopNpcId = null;
+
+  shopClose.addEventListener('click', () => {
+    shopOverlay.classList.remove('open');
+    currentShopNpcId = null;
+  });
+
+  shopOverlay.addEventListener('click', (e) => {
+    if (e.target === shopOverlay) {
+      shopOverlay.classList.remove('open');
+      currentShopNpcId = null;
     }
-  }
-  
-  function loadChat(): void {
-    const key = getChatStorageKey();
-    if (!key) return;
+  });
+
+  // Listener per evento [SHOP: npc_id] dal tagParser
+  window.addEventListener('open-shop', async (e) => {
+    const npcId = e.detail?.npcId;
+    if (!npcId || !character) return;
+    await openShop(npcId);
+  });
+
+  async function openShop(npcId) {
     try {
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        history = JSON.parse(saved);
-        // Ripopola UI
-        history.forEach(msg => {
-          addMessage(msg.content, msg.role === 'user', undefined, false);
+      const shop = await getShop(character.id, npcId);
+      currentShopNpcId = npcId;
+
+      // Aggiorna header
+      document.getElementById('shop-npc-name').textContent = shop.npc_name;
+      document.getElementById('shop-npc-title').textContent = shop.npc_title;
+      document.getElementById('shop-corone').textContent = character.corone || 0;
+
+      // Render lista NPC
+      const shopList = document.getElementById('shop-items-list');
+      shopList.innerHTML = shop.items.map(item => {
+        const stockText = item.stock === -1 ? '' : ` (${item.stock} disp.)`;
+        const outOfStock = item.stock === 0;
+        return `
+          <div class="shop-item ${outOfStock ? 'out-of-stock' : ''}" data-eq-id="${item.id}">
+            <div class="shop-item-info">
+              <span class="shop-item-name ${item.rarity || 'common'}">${item.name}</span>
+              <span class="shop-item-type">${item.type}${stockText}</span>
+            </div>
+            <button class="shop-buy-btn" ${outOfStock ? 'disabled' : ''} data-eq-id="${item.id}">
+              🪙 ${item.buy_price}
+            </button>
+          </div>
+        `;
+      }).join('') || '<p class="shop-empty">Nessun item in vendita</p>';
+
+      // Render inventario giocatore (per vendere)
+      await refreshShopPlayerItems(shop);
+
+      // Bind buy buttons
+      shopList.querySelectorAll('.shop-buy-btn:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const eqId = btn.dataset.eqId;
+          try {
+            const result = await buyFromShop(character.id, npcId, eqId);
+            if (result.success) {
+              // Refresh character e shop
+              const charResult = await getCharacterBySlot(slot);
+              if (charResult.exists) character = charResult.character;
+              await openShop(npcId);
+            }
+          } catch (err) {
+            console.error('Buy error:', err);
+          }
         });
-      }
-    } catch (e) {
-      console.warn('Impossibile caricare chat:', e);
-      history = [];
+      });
+
+      shopOverlay.classList.add('open');
+    } catch (err) {
+      console.error('Shop error:', err);
     }
   }
-  
-  // ═══════════════════════════════════════
-  // INIT
-  // ═══════════════════════════════════════
-  
-  async function init() {
-    try {
-      const result = await getCharacterBySlot(slot);
-      
-      if (!result.exists) {
-        window.location.href = '/';
-        return;
-      }
-      
-      character = result.character;
-      updateHeaderInfo();
-      
-      // Carica location corrente
-      try {
-        const locResult = await getCurrentLocation(character.id);
-        if (locResult.current_location) {
-          currentLocationId = locResult.current_location.id;
+
+  async function refreshShopPlayerItems(shop) {
+    const playerList = document.getElementById('shop-player-items');
+    const inv = character.inventory || [];
+    const sellPrices = shop.sell_prices || {};
+    const sellModifier = shop.sell_modifier || 0.5;
+
+    if (!inv.length) {
+      playerList.innerHTML = '<p class="shop-empty">Inventario vuoto</p>';
+      return;
+    }
+
+    playerList.innerHTML = inv.map(item => {
+      const eq = item;
+      const itemName = eq.item_name || eq.name;
+      // Usa prezzo pre-calcolato dal backend; fallback locale solo se manca
+      const sellPrice = sellPrices[itemName]
+        ?? Math.max(1, Math.floor((eq.sell_price || 0) * sellModifier));
+      return `
+        <div class="shop-item">
+          <div class="shop-item-info">
+            <span class="shop-item-name ${eq.rarity || 'common'}">${itemName}</span>
+            <span class="shop-item-type">${eq.type || 'Oggetto'}${eq.quantity > 1 ? ` x${eq.quantity}` : ''}</span>
+          </div>
+          <button class="shop-sell-btn" data-item-name="${itemName}">
+            Vendi 🪙 ${sellPrice}
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    // Bind sell buttons
+    playerList.querySelectorAll('.shop-sell-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const itemName = btn.dataset.itemName;
+        try {
+          const result = await sellToShop(character.id, currentShopNpcId, itemName);
+          if (result.success) {
+            const charResult = await getCharacterBySlot(slot);
+            if (charResult.exists) character = charResult.character;
+            await openShop(currentShopNpcId);
+          }
+        } catch (err) {
+          console.error('Sell error:', err);
         }
-      } catch (e) {
-        console.log('Nessuna location salvata');
-      }
-      
-      // Carica chat salvata per questa location
-      loadChat();
-      
-      // Inizializza MiniMap
-      if (window.MiniMapController) {
-        miniMap = new window.MiniMapController();
-        miniMap.setCharacterId(character.id);
-        miniMap.refresh();
-      }
-      
-    } catch (e) {
-      console.error('Errore caricamento personaggio:', e);
-      alert('Errore di connessione al server');
-      window.location.href = '/';
-    }
+      });
+    });
   }
-  
+
+  // Header update
   function updateHeaderInfo() {
     if (!character) return;
-    
     document.getElementById('header-name').textContent = character.name;
     document.getElementById('header-hp').textContent = character.hp_current;
     document.getElementById('header-hp-max').textContent = character.hp_max;
+    document.getElementById('header-xp').textContent = character.xp || 0;
+    document.getElementById('header-xp-max').textContent = character.xp_next || 100;
+    document.getElementById('header-level').textContent = `Lv.${character.level || 1}`;
   }
-  
-  // ═══════════════════════════════════════
-  // CHAT
-  // ═══════════════════════════════════════
-  
-  function addMessage(content: string, isUser = false, messageId?: string, persist = true) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message message--${isUser ? 'user' : 'ai'}`;
-    if (messageId) msgDiv.dataset.messageId = messageId;
-    
-    let displayContent = content;
-    if (!isUser) {
-      // Rimuovi tag location XML e formatta tag meccanici
-      displayContent = stripLocationTags(content);
-      displayContent = formatTagsForDisplay(displayContent);
-    }
-    
-    // Struttura messaggio con pulsante Focus per messaggi GM
-    if (isUser) {
-      msgDiv.innerHTML = `
-        <div class="message__label">Tu</div>
-        <div class="message__content">${displayContent}</div>
-      `;
-    } else {
-      const id = messageId || `msg-${Date.now()}`;
-      msgDiv.innerHTML = `
-        <div class="message__header">
-          <span class="message__label">Game Master</span>
-          <button class="btn-focus" data-msg-id="${id}" title="Espandi con più dettagli">
-            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="M21 21l-4.35-4.35"></path>
-              <path d="M11 8v6M8 11h6"></path>
-            </svg>
-            Focus
-          </button>
-        </div>
-        <div class="message__content" data-original="${encodeURIComponent(content)}">${displayContent}</div>
-      `;
-      
-      // Aggiungi listener per il pulsante Focus
-      const focusBtn = msgDiv.querySelector('.btn-focus');
-      focusBtn?.addEventListener('click', () => handleFocus(id, content));
-    }
-    
-    if (typingIndicator && chatMessages) {
-      chatMessages.insertBefore(msgDiv, typingIndicator);
-    } else {
-      chatMessages?.appendChild(msgDiv);
-    }
-    
-    if (chatMessages) {
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-    
-    return msgDiv;
-  }
-  
-  function addRecapMessage(recap: string) {
-    if (!recap) return;
-    
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'message message--recap';
-    msgDiv.innerHTML = `
-      <div class="message__label">📜 Memoria</div>
-      <div class="message__content">${recap.replace(/\n/g, '<br>')}</div>
-    `;
-    
-    if (typingIndicator && chatMessages) {
-      chatMessages.insertBefore(msgDiv, typingIndicator);
-    } else {
-      chatMessages?.appendChild(msgDiv);
-    }
-  }
-  
-  // ═══════════════════════════════════════
-  // FOCUS (Espansione con Sonnet)
-  // ═══════════════════════════════════════
-  
-  async function handleFocus(messageId: string, originalContent: string) {
-    // Trova il messaggio
-    const msgDiv = document.querySelector(`[data-message-id="${messageId}"]`);
-    if (!msgDiv) return;
-    
-    const contentDiv = msgDiv.querySelector('.message__content');
-    const focusBtn = msgDiv.querySelector('.btn-focus') as HTMLButtonElement;
-    
-    if (!contentDiv || !focusBtn) return;
-    
-    // Già espanso?
-    if (msgDiv.classList.contains('expanded')) {
-      // Toggle back to original
-      const original = decodeURIComponent(contentDiv.getAttribute('data-original') || '');
-      let displayContent = stripLocationTags(original);
-      displayContent = formatTagsForDisplay(displayContent);
-      contentDiv.innerHTML = displayContent;
-      msgDiv.classList.remove('expanded');
-      focusBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
-          <circle cx="11" cy="11" r="8"></circle>
-          <path d="M21 21l-4.35-4.35"></path>
-          <path d="M11 8v6M8 11h6"></path>
-        </svg>
-        Focus
-      `;
-      return;
-    }
-    
-    // Mostra loading
-    focusBtn.disabled = true;
-    focusBtn.innerHTML = `
-      <span class="loading-spinner"></span>
-      Espando...
-    `;
-    
-    try {
-      // Determina il tipo di contesto
-      const contextType = detectContextType(originalContent);
-      
-      const data = await expandMessage(
-        originalContent,
-        contextType,
-        character,
-        currentLocationId,
-        history.slice(-10)
-      );
-      
-      // Aggiorna contenuto con versione espansa
-      let expandedDisplay = stripLocationTags(data.expanded);
-      expandedDisplay = formatTagsForDisplay(expandedDisplay);
-      contentDiv.innerHTML = expandedDisplay;
-      
-      // Marca come espanso
-      msgDiv.classList.add('expanded');
-      focusBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
-          <circle cx="11" cy="11" r="8"></circle>
-          <path d="M21 21l-4.35-4.35"></path>
-          <path d="M8 11h6"></path>
-        </svg>
-        Riduci
-      `;
-      
-    } catch (error) {
-      console.error('Errore espansione:', error);
-      focusBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
-          <circle cx="11" cy="11" r="8"></circle>
-          <path d="M21 21l-4.35-4.35"></path>
-          <path d="M11 8v6M8 11h6"></path>
-        </svg>
-        Focus
-      `;
-    }
-    
-    focusBtn.disabled = false;
-  }
-  
-  function detectContextType(content: string): string {
-    // Rileva il tipo di contesto per analytics
-    if (content.includes('[DMG:') || content.includes('[SPELL:')) return 'combat';
-    if (content.includes('[NPC:')) return 'dialogue';
-    if (content.includes('[LORE:')) return 'lore';
-    if (content.includes('[ITEM:')) return 'discovery';
-    return 'description';
-  }
-  
-  function showTyping() {
-    typingIndicator?.classList.add('active');
-    if (chatMessages) {
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-  }
-  
-  function hideTyping() {
-    typingIndicator?.classList.remove('active');
-  }
-  
-  async function sendMessage() {
-    const text = chatInput?.value.trim();
-    if (!text || !character) return;
-    
-    addMessage(text, true);
-    history.push({ role: 'user', content: text });
-    saveChat();  // Salva dopo messaggio user
-    
-    if (chatInput) {
-      chatInput.value = '';
-      chatInput.style.height = 'auto';
-    }
-    if (btnSend) btnSend.disabled = true;
-    
-    showTyping();
-    
-    try {
-      const data = await sendChatMessage(
-        text,
-        history.slice(-20),
-        character,
-        currentLocationId
-      );
-      
-      hideTyping();
-      
-      // Parse tag
-      const tags = parseTags(data.response);
-      console.log('Tags:', tags);
-      console.log('Model:', data.model); // Dovrebbe essere 'haiku'
-      
-      // Log location updates se presenti
-      if (data.location_updates) {
-        console.log('Location updates:', data.location_updates);
-        
-        // Aggiorna mini-mappa se ci sono stati cambiamenti
-        if (data.location_updates.locations_created?.length > 0 ||
-            data.location_updates.movements?.length > 0 ||
-            data.location_updates.modifications?.length > 0) {
-          miniMap?.refresh();
-        }
-        
-        // Se c'è stato un movimento, aggiorna location corrente
-        if (data.location_updates.movements?.length > 0) {
-          const lastMovement = data.location_updates.movements[data.location_updates.movements.length - 1];
-          // Supporta sia oggetto {to: "..."} che stringa diretta
-          const newLocation = typeof lastMovement === 'string' ? lastMovement : lastMovement.to;
-          if (newLocation) {
-            await handleLocationChange(currentLocationId, newLocation);
-          }
-        }
-      }
-      
-      const messageId = `msg-${Date.now()}`;
-      addMessage(data.response, false, messageId);
-      history.push({ role: 'assistant', content: data.response });
-      saveChat();  // Salva dopo messaggio assistant
-      
-    } catch (error) {
-      hideTyping();
-      addMessage('*La connessione con il piano astrale si è interrotta momentaneamente...*', false);
-      console.error('Error:', error);
-    }
-    
-    if (btnSend) btnSend.disabled = false;
-    chatInput?.focus();
-  }
-  
-  async function handleLocationChange(fromLocation: string, toLocation: string) {
+
+  // ══════════════════════════════════════════════════════
+  // QUICK INTERACTIONS: VENDOR PANEL
+  // ══════════════════════════════════════════════════════
+
+  const qiPanel = document.getElementById('qi-panel');
+  const qiHeader = document.getElementById('qi-header');
+  const qiBody = document.getElementById('qi-body');
+  let qiCollapsed = false;
+
+  qiHeader.addEventListener('click', () => {
+    qiCollapsed = !qiCollapsed;
+    qiBody.style.display = qiCollapsed ? 'none' : '';
+    qiPanel.classList.toggle('collapsed', qiCollapsed);
+  });
+
+  const VENDOR_ICONS = {
+    blacksmith: '\u2692\uFE0F',
+    innkeeper: '\uD83C\uDF7A',
+    alchemist: '\uD83E\uDDEA',
+    merchant: '\uD83C\uDFEA',
+    herbalist: '\uD83C\uDF3F',
+  };
+
+  async function refreshVendorPanel() {
     if (!character) return;
-    
     try {
-      const result = await switchLocation(
-        character.id,
-        fromLocation,
-        toLocation,
-        history
-      );
-      
-      // Aggiorna location corrente
-      currentLocationId = toLocation;
-      
-      // Se c'è un recap (non è la prima visita), mostralo
-      if (result.recap) {
-        addRecapMessage(result.recap);
+      const data = await getNearbyVendors(character.id);
+      const vendors = data.vendors || [];
+
+      if (!vendors.length) {
+        qiPanel.style.display = 'none';
+        return;
       }
-      
-      // Carica la history della nuova location
-      if (result.messages && result.messages.length > 0) {
-        // Potresti voler caricare i messaggi precedenti
-        // Per ora manteniamo solo la storia corrente
-        console.log(`Loaded ${result.messages.length} messages from location ${toLocation}`);
-      }
-      
-    } catch (error) {
-      console.error('Errore switch location:', error);
+
+      qiBody.innerHTML = vendors.map(v => {
+        const icon = VENDOR_ICONS[v.role] || VENDOR_ICONS.merchant;
+        return `
+          <button class="qi-vendor-card" data-npc-id="${v.npc_id}">
+            <span class="qi-vendor-icon">${icon}</span>
+            <div class="qi-vendor-info">
+              <span class="qi-vendor-name">${v.name}</span>
+              <span class="qi-vendor-title">${v.title || v.role}</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      // Bind click → open shop
+      qiBody.querySelectorAll('.qi-vendor-card').forEach(card => {
+        card.addEventListener('click', () => openShop(card.dataset.npcId));
+      });
+
+      qiPanel.style.display = '';
+    } catch (e) {
+      console.warn('Vendor panel error:', e);
+      qiPanel.style.display = 'none';
     }
   }
-  
-  // Event listeners
-  btnSend?.addEventListener('click', sendMessage);
-  
-  chatInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-  
-  chatInput?.addEventListener('input', () => {
-    if (chatInput) {
-      chatInput.style.height = 'auto';
-      chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px';
-    }
-  });
-  
+
   // Init
+  async function init() {
+    try {
+      const result = await getCharacterBySlot(slot);
+      if (!result.exists) { window.location.href = '/home'; return; }
+
+      character = result.character;
+      updateHeaderInfo();
+
+      try {
+        const locResult = await getCurrentLocation(character.id);
+        if (locResult.current_location) currentLocationId = locResult.current_location.id;
+      } catch (e) { console.log('Nessuna location salvata'); }
+
+      // Se arriviamo dalla mappa con una location specifica, switcha
+      if (targetLocation && targetLocation !== currentLocationId) {
+        try {
+          await chat.handleLocationChange(currentLocationId, targetLocation);
+          currentLocationId = targetLocation;
+          // NON chiamare loadHistory — handleLocationChange ha gia' caricato dal backend
+        } catch (e) {
+          console.warn('Switch location da mappa fallito:', e);
+          chat.loadHistory(); // fallback: carica da localStorage
+        }
+      } else {
+        chat.loadHistory(); // Nessun switch: carica normalmente da localStorage
+      }
+
+      if (window.MiniMapController) {
+        miniMap = new window.MiniMapController();
+        miniMap.setCharacterId(character.id);
+        miniMap.setOnMove(async (fromId, toId) => {
+          await chat.handleLocationChange(fromId, toId);
+        });
+        miniMap.refresh();
+      }
+
+      // Carica vendor panel
+      refreshVendorPanel();
+    } catch (e) {
+      console.error('Errore caricamento personaggio:', e);
+      chat.addMessage('*Impossibile raggiungere il server... ritorno alla selezione personaggi.*', false);
+      setTimeout(() => { window.location.href = '/home'; }, 3000);
+    }
+  }
+
+  // Salva chat prima di uscire dalla pagina
+  window.addEventListener('beforeunload', () => {
+    chat.saveCurrentChat?.();
+  });
+
   init();
 </script>
 
@@ -476,7 +444,30 @@ import MiniMap from '../components/map/MiniMap.astro';
     font-size: 0.75rem;
     color: var(--vita);
   }
-  
+
+  .char-xp {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .char-level-badge {
+    background: var(--accent);
+    color: var(--void);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: bold;
+  }
+
+  .header-links {
+    display: flex;
+    gap: var(--space-sm);
+  }
+
   .btn-sheet {
     display: flex;
     align-items: center;
@@ -491,7 +482,7 @@ import MiniMap from '../components/map/MiniMap.astro';
     text-decoration: none;
     transition: var(--transition-fast);
   }
-  
+
   .btn-sheet:hover {
     border-color: var(--accent);
     color: var(--accent);
@@ -594,5 +585,420 @@ import MiniMap from '../components/map/MiniMap.astro';
     font-style: italic;
     font-size: 0.9rem;
     line-height: 1.6;
+  }
+
+  /* ═══════════════════════════════════════
+     LEVEL-UP MESSAGE
+     ═══════════════════════════════════════ */
+
+  .message--levelup {
+    background: linear-gradient(135deg, rgba(201, 169, 89, 0.2) 0%, rgba(201, 169, 89, 0.05) 100%);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    padding: var(--space-md);
+    margin: var(--space-md) 0;
+    text-align: center;
+    animation: levelUpGlow 1.5s ease-in-out;
+  }
+
+  .message--levelup .message__label {
+    color: var(--accent);
+    font-family: var(--font-narrative);
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: var(--space-sm);
+    text-shadow: 0 0 10px rgba(201, 169, 89, 0.5);
+  }
+
+  .message--levelup .message__content {
+    color: var(--parchment);
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+
+  .message--levelup .message__content strong {
+    font-size: 1.1rem;
+    color: var(--accent);
+  }
+
+  @keyframes levelUpGlow {
+    0%, 100% { box-shadow: 0 0 5px rgba(201, 169, 89, 0.3); }
+    50% { box-shadow: 0 0 25px rgba(201, 169, 89, 0.6); }
+  }
+
+  /* ═══════════════════════════════════════
+     CORONE NOTIFICATION MESSAGE
+     ═══════════════════════════════════════ */
+
+  .message--corone {
+    border-radius: 8px;
+    padding: var(--space-sm) var(--space-md);
+    margin: var(--space-sm) 0;
+    text-align: center;
+    font-size: 0.85rem;
+  }
+
+  .message--corone .message__label {
+    font-family: var(--font-narrative);
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+  }
+
+  .message--corone .message__content {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+
+  .message--corone-gain {
+    background: linear-gradient(135deg, rgba(241, 196, 15, 0.15) 0%, rgba(241, 196, 15, 0.05) 100%);
+    border: 1px solid rgba(241, 196, 15, 0.4);
+  }
+  .message--corone-gain .message__label { color: #f1c40f; }
+  .message--corone-gain .message__content strong { color: #f1c40f; }
+
+  .message--corone-loss {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.12) 0%, rgba(231, 76, 60, 0.04) 100%);
+    border: 1px solid rgba(231, 76, 60, 0.35);
+  }
+  .message--corone-loss .message__label { color: #e74c3c; }
+  .message--corone-loss .message__content strong { color: #e74c3c; }
+
+  /* ═══════════════════════════════════════
+     MEMO FAB & POPUP
+     ═══════════════════════════════════════ */
+
+  .memo-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    color: var(--void);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(201, 169, 89, 0.2);
+    transition: all 0.2s;
+    z-index: 900;
+  }
+  .memo-fab:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(201, 169, 89, 0.35);
+  }
+
+  /* ═══════════════════════════════════════ */
+  /* SHOP OVERLAY                           */
+  /* ═══════════════════════════════════════ */
+
+  .shop-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md);
+  }
+  .shop-overlay.open { display: flex; }
+
+  .shop-modal {
+    background: var(--shadow);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  .shop-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--mist);
+  }
+  .shop-npc-info { flex: 1; }
+  .shop-npc-name { font-family: var(--font-narrative); font-size: 1.2rem; color: var(--parchment); margin: 0; }
+  .shop-npc-title { font-size: 0.7rem; color: var(--smoke); }
+  .shop-player-corone {
+    display: flex; align-items: center; gap: 4px;
+    font-family: var(--font-mono); font-size: 1rem; color: #f1c40f; font-weight: 600;
+    background: var(--void); padding: 4px 12px; border-radius: 6px;
+  }
+  .shop-close {
+    background: none; border: none; color: var(--smoke); font-size: 1.5rem; cursor: pointer;
+    padding: 0 4px; line-height: 1;
+  }
+  .shop-close:hover { color: var(--parchment); }
+
+  .shop-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    overflow-y: auto;
+    flex: 1;
+  }
+  @media (max-width: 600px) { .shop-body { grid-template-columns: 1fr; } }
+
+  .shop-col-title {
+    font-size: 0.7rem; text-transform: uppercase; color: var(--smoke);
+    margin: 0 0 var(--space-sm); padding-bottom: var(--space-xs);
+    border-bottom: 1px solid var(--mist);
+  }
+
+  .shop-items { display: flex; flex-direction: column; gap: var(--space-xs); }
+
+  .shop-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--void); border-radius: 6px; border: 1px solid var(--mist);
+    transition: border-color 0.15s;
+  }
+  .shop-item:hover { border-color: var(--accent); }
+  .shop-item.out-of-stock { opacity: 0.4; }
+
+  .shop-item-info { display: flex; flex-direction: column; min-width: 0; }
+  .shop-item-name { font-size: 0.75rem; font-weight: 500; color: var(--bone); }
+  .shop-item-name.common { color: #7f8c8d; }
+  .shop-item-name.uncommon { color: #27ae60; }
+  .shop-item-name.rare { color: #3498db; }
+  .shop-item-name.epic { color: #9b59b6; }
+  .shop-item-name.legendary { color: #f39c12; }
+  .shop-item-type { font-size: 0.6rem; color: var(--smoke); text-transform: capitalize; }
+
+  .shop-buy-btn, .shop-sell-btn {
+    padding: 4px 10px;
+    font-size: 0.65rem;
+    background: rgba(218, 165, 32, 0.15);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    color: var(--accent);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .shop-buy-btn:hover, .shop-sell-btn:hover {
+    background: rgba(218, 165, 32, 0.3);
+    color: var(--parchment);
+  }
+  .shop-buy-btn:disabled { opacity: 0.3; cursor: default; }
+  .shop-sell-btn { border-color: var(--vita); color: var(--vita); background: rgba(39, 174, 96, 0.1); }
+  .shop-sell-btn:hover { background: rgba(39, 174, 96, 0.25); }
+
+  .shop-empty { font-size: 0.75rem; color: var(--smoke); font-style: italic; padding: var(--space-md); text-align: center; }
+
+  .shop-footer { padding: var(--space-sm) var(--space-md); border-top: 1px solid var(--mist); font-size: 0.65rem; color: var(--smoke); text-align: center; }
+
+  .memo-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 950;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .memo-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .memo-popup {
+    width: 360px;
+    max-height: 70vh;
+    background: var(--abyss);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    transform: translateY(20px);
+    transition: transform 0.25s ease;
+  }
+  .memo-overlay.open .memo-popup {
+    transform: translateY(0);
+  }
+
+  .memo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--mist);
+  }
+  .memo-header h3 {
+    margin: 0;
+    font-family: var(--font-narrative);
+    font-size: 1rem;
+    color: var(--parchment);
+  }
+  .memo-close {
+    background: none;
+    border: none;
+    color: var(--ash);
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .memo-close:hover { color: var(--parchment); }
+
+  .memo-textarea {
+    flex: 1;
+    margin: var(--space-md) var(--space-lg);
+    padding: var(--space-md);
+    background: var(--void);
+    border: 1px solid var(--mist);
+    border-radius: 8px;
+    color: var(--bone);
+    font-family: var(--font-narrative);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    resize: none;
+    min-height: 150px;
+  }
+  .memo-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .memo-footer {
+    padding: var(--space-sm) var(--space-lg) var(--space-md);
+  }
+  .memo-status {
+    font-size: 0.7rem;
+    color: var(--smoke);
+    font-family: var(--font-mono);
+  }
+
+  /* ═══════════════════════════════════════
+     QUICK INTERACTIONS: VENDOR PANEL
+     ═══════════════════════════════════════ */
+
+  .qi-panel {
+    position: fixed;
+    bottom: 84px;
+    right: 24px;
+    z-index: 100;
+    width: 240px;
+    background: var(--void);
+    border: 1px solid var(--mist);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    animation: qiFadeIn 0.25s ease;
+  }
+
+  @keyframes qiFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .qi-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--shadow);
+    border: none;
+    border-bottom: 1px solid var(--mist);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .qi-header:hover { background: rgba(201, 169, 89, 0.08); }
+
+  .qi-title {
+    font-family: var(--font-narrative);
+    font-size: 0.85rem;
+    color: var(--parchment);
+    letter-spacing: 0.02em;
+  }
+
+  .qi-chevron {
+    color: var(--smoke);
+    transition: transform 0.2s;
+  }
+  .qi-panel.collapsed .qi-chevron { transform: rotate(-90deg); }
+
+  .qi-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+
+  .qi-vendor-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--shadow);
+    border: 1px solid var(--mist);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .qi-vendor-card:hover {
+    border-color: var(--accent);
+    background: rgba(201, 169, 89, 0.06);
+    box-shadow: 0 0 12px rgba(201, 169, 89, 0.2);
+  }
+
+  .qi-vendor-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .qi-vendor-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .qi-vendor-name {
+    font-family: var(--font-narrative);
+    font-size: 0.85rem;
+    color: var(--parchment);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .qi-vendor-title {
+    font-size: 0.65rem;
+    color: var(--smoke);
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 500px) {
+    .memo-popup { width: calc(100vw - 48px); }
+    .memo-fab { bottom: 16px; right: 16px; width: 46px; height: 46px; }
+    .header-links { gap: 4px; }
+    .btn-sheet { font-size: 0; gap: 0; padding: var(--space-sm); }
+    .btn-sheet svg { width: 20px; height: 20px; }
+    .qi-panel { bottom: 70px; right: 16px; left: 16px; width: auto; }
   }
 </style>

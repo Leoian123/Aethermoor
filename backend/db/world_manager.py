@@ -603,7 +603,391 @@ class WorldManager:
             if subloc:
                 breadcrumb.append({"id": pos.sublocation_id, "name": subloc["name"], "type": "sublocation"})
         return breadcrumb
+    
+    def sublocation_exists_in_seed(self, subloc_id: str) -> bool:
+        """Verifica se una sublocation esiste nel seed."""
+        return subloc_id in self.seed.get("sublocations", {})
 
+    # ═══════════════════════════════════════════════════════════════
+    # WORLD GRAPH — Multi-depth map data for WorldMap page
+    # ═══════════════════════════════════════════════════════════════
+
+    def get_world_graph(self, character_id: str, depth: int, parent_id: str = None) -> Dict[str, Any]:
+        """
+        Ritorna il grafo del mondo a un dato livello di profondita'.
+
+        depth=0: regioni (figli del mondo)
+        depth=1: zone (figli della regione parent_id)
+        depth=2: location (figli della zona parent_id)
+        depth=3: sublocation top-level (figli della location parent_id) + edges
+        depth=4+: sublocation nested (figli della sublocation parent_id)
+
+        Returns: { nodes, edges, breadcrumb, current_path, depth, parent_id }
+        """
+        state_mgr = get_player_state_manager()
+        state = state_mgr.get_state(character_id)
+        pos = state.position
+
+        nodes = []
+        edges = []
+
+        current_path = {
+            'region_id': pos.region_id,
+            'zone_id': pos.zone_id,
+            'location_id': pos.location_id,
+            'sublocation_id': pos.sublocation_id
+        }
+
+        if depth == 0:
+            # Tutte le regioni
+            for region_id, region in self.seed.get("regions", {}).items():
+                is_current = region_id == pos.region_id
+                nodes.append({
+                    "id": region_id,
+                    "name": region.get("name", region_id),
+                    "type": region.get("type", "region"),
+                    "description": region.get("description", ""),
+                    "tags": region.get("tags", []),
+                    "hex": region.get("hex", [0, 0]),
+                    "is_current": is_current,
+                    "visited": True,  # Regioni sempre visibili
+                    "has_children": True,
+                    "is_leaf": False,
+                    "child_count": len([z for z in self.seed.get("zones", {}).values()
+                                        if z.get("region_id") == region_id]),
+                    "depth": 0
+                })
+
+        elif depth == 1:
+            # Zone nella regione
+            for zone_id, zone in self.seed.get("zones", {}).items():
+                if zone.get("region_id") == parent_id:
+                    is_current = zone_id == pos.zone_id
+                    nodes.append({
+                        "id": zone_id,
+                        "name": zone.get("name", zone_id),
+                        "type": zone.get("type", "zone"),
+                        "description": zone.get("description", ""),
+                        "tags": zone.get("tags", []),
+                        "hex": zone.get("hex", [0, 0]),
+                        "is_current": is_current,
+                        "visited": True,  # Zone sempre visibili
+                        "has_children": len(zone.get("locations", [])) > 0,
+                        "is_leaf": False,
+                        "child_count": len(zone.get("locations", [])),
+                        "depth": 1
+                    })
+
+        elif depth == 2:
+            # Location nella zona
+            zone = self.get_zone(parent_id)
+            if zone:
+                for loc_id in zone.get("locations", []):
+                    loc = self.get_location(loc_id)
+                    if loc:
+                        is_current = loc_id == pos.location_id
+                        # Controlla se qualsiasi sublocation e' stata visitata
+                        visited = any(
+                            state.get_visit_count(sid) > 0
+                            for sid in loc.get("sublocations", [])
+                        ) or state.get_visit_count(loc_id) > 0
+                        nodes.append({
+                            "id": loc_id,
+                            "name": loc.get("name", loc_id),
+                            "type": loc.get("type", "location"),
+                            "description": loc.get("description", ""),
+                            "tags": loc.get("tags", []),
+                            "hex": loc.get("hex", [0, 0]),
+                            "is_current": is_current,
+                            "visited": visited,
+                            "has_children": len(loc.get("sublocations", [])) > 0,
+                            "is_leaf": False,
+                            "child_count": len(loc.get("sublocations", [])),
+                            "depth": 2
+                        })
+
+        elif depth == 3:
+            # Sublocation top-level della location
+            location = self.get_location(parent_id)
+            if location:
+                node_ids = set()
+                for subloc_id in location.get("sublocations", []):
+                    subloc = self.get_sublocation(subloc_id, state)
+                    if subloc and subloc.get("parent_id") == parent_id:
+                        visited = state.get_visit_count(subloc_id) > 0
+                        has_children = len(subloc.get("children", [])) > 0
+                        is_current = (pos.sublocation_id == subloc_id or
+                                      pos.sublocation_id.startswith(subloc_id + ".") if pos.sublocation_id else False)
+                        nodes.append({
+                            "id": subloc_id,
+                            "name": subloc.get("name", subloc_id),
+                            "type": subloc.get("type", "room"),
+                            "description": subloc.get("description", ""),
+                            "tags": subloc.get("tags", []),
+                            "visited": visited,
+                            "is_current": is_current,
+                            "has_children": has_children,
+                            "is_leaf": not has_children,
+                            "child_count": len(subloc.get("children", [])),
+                            "depth": 3
+                        })
+                        node_ids.add(subloc_id)
+
+                # Aggiungi sublocation procedurali scoperte
+                for subloc_id, subloc_data in state.discovered_sublocations.items():
+                    if subloc_data.get("parent_id") == parent_id and subloc_id not in node_ids:
+                        visited = state.get_visit_count(subloc_id) > 0
+                        has_children = len(subloc_data.get("children", [])) > 0
+                        is_current = pos.sublocation_id == subloc_id
+                        nodes.append({
+                            "id": subloc_id,
+                            "name": subloc_data.get("name", subloc_id),
+                            "type": subloc_data.get("type", "room"),
+                            "description": subloc_data.get("description", ""),
+                            "tags": subloc_data.get("tags", []),
+                            "visited": visited,
+                            "is_current": is_current,
+                            "has_children": has_children,
+                            "is_leaf": not has_children,
+                            "child_count": len(subloc_data.get("children", [])),
+                            "depth": 3,
+                            "procedural": True
+                        })
+                        node_ids.add(subloc_id)
+
+                # Edges da exits
+                seen_edges = set()
+                for subloc_id in node_ids:
+                    subloc = self.get_sublocation(subloc_id, state)
+                    if subloc:
+                        for exit_id in subloc.get("exits", {}).keys():
+                            if exit_id in node_ids:
+                                edge_key = tuple(sorted([subloc_id, exit_id]))
+                                if edge_key not in seen_edges:
+                                    seen_edges.add(edge_key)
+                                    edges.append({
+                                        "from": subloc_id,
+                                        "to": exit_id,
+                                        "type": "connection"
+                                    })
+                        for child_id in subloc.get("children", []):
+                            if child_id in node_ids:
+                                edge_key = tuple(sorted([subloc_id, child_id]))
+                                if edge_key not in seen_edges:
+                                    seen_edges.add(edge_key)
+                                    edges.append({
+                                        "from": subloc_id,
+                                        "to": child_id,
+                                        "type": "enter"
+                                    })
+
+        elif depth >= 4:
+            # Sublocation nested (figli di una sublocation)
+            parent_subloc = self.get_sublocation(parent_id, state)
+            if parent_subloc:
+                node_ids = set()
+                for child_id in parent_subloc.get("children", []):
+                    child = self.get_sublocation(child_id, state)
+                    if child:
+                        visited = state.get_visit_count(child_id) > 0
+                        has_children = len(child.get("children", [])) > 0
+                        is_current = pos.sublocation_id == child_id
+                        nodes.append({
+                            "id": child_id,
+                            "name": child.get("name", child_id),
+                            "type": child.get("type", "room"),
+                            "description": child.get("description", ""),
+                            "tags": child.get("tags", []),
+                            "visited": visited,
+                            "is_current": is_current,
+                            "has_children": has_children,
+                            "is_leaf": not has_children,
+                            "child_count": len(child.get("children", [])),
+                            "depth": depth
+                        })
+                        node_ids.add(child_id)
+
+                # Edges tra i figli
+                seen_edges = set()
+                for child_id in node_ids:
+                    child = self.get_sublocation(child_id, state)
+                    if child:
+                        for exit_id in child.get("exits", {}).keys():
+                            if exit_id in node_ids:
+                                edge_key = tuple(sorted([child_id, exit_id]))
+                                if edge_key not in seen_edges:
+                                    seen_edges.add(edge_key)
+                                    edges.append({
+                                        "from": child_id,
+                                        "to": exit_id,
+                                        "type": "connection"
+                                    })
+
+        breadcrumb = self._build_world_breadcrumb(depth, parent_id)
+
+        return {
+            "nodes": nodes,
+            "edges": edges,
+            "breadcrumb": breadcrumb,
+            "current_path": current_path,
+            "depth": depth,
+            "parent_id": parent_id
+        }
+
+    def _build_world_breadcrumb(self, depth: int, parent_id: str) -> List[Dict[str, Any]]:
+        """Costruisce breadcrumb risalendo la gerarchia fino al livello richiesto."""
+        breadcrumb = [{"id": None, "name": "Aethermoor", "type": "world", "depth": 0}]
+
+        if depth == 0 or not parent_id:
+            return breadcrumb
+
+        if depth == 1:
+            # Siamo dentro una regione
+            region = self.get_region(parent_id)
+            if region:
+                breadcrumb.append({"id": parent_id, "name": region["name"], "type": "region", "depth": 1})
+
+        elif depth == 2:
+            # Siamo dentro una zona
+            zone = self.get_zone(parent_id)
+            if zone:
+                region = self.get_region(zone.get("region_id", ""))
+                if region:
+                    breadcrumb.append({"id": zone["region_id"], "name": region["name"], "type": "region", "depth": 1})
+                breadcrumb.append({"id": parent_id, "name": zone["name"], "type": "zone", "depth": 2})
+
+        elif depth == 3:
+            # Siamo dentro una location
+            location = self.get_location(parent_id)
+            if location:
+                zone = self.get_zone(location.get("zone_id", ""))
+                if zone:
+                    region = self.get_region(zone.get("region_id", ""))
+                    if region:
+                        breadcrumb.append({"id": zone["region_id"], "name": region["name"], "type": "region", "depth": 1})
+                    breadcrumb.append({"id": location["zone_id"], "name": zone["name"], "type": "zone", "depth": 2})
+                breadcrumb.append({"id": parent_id, "name": location["name"], "type": "location", "depth": 3})
+
+        elif depth >= 4:
+            # Siamo dentro una sublocation nested — risali la catena
+            subloc = self.get_sublocation(parent_id, None)
+            if subloc:
+                # Risali fino alla location
+                chain = [{"id": parent_id, "name": subloc.get("name", parent_id), "type": "sublocation", "depth": depth}]
+                current_parent = subloc.get("parent_id", "")
+                current_depth = depth - 1
+
+                while current_parent and "." in current_parent:
+                    parent_subloc = self.get_sublocation(current_parent, None)
+                    if parent_subloc:
+                        chain.append({"id": current_parent, "name": parent_subloc.get("name", current_parent),
+                                      "type": "sublocation", "depth": current_depth})
+                        current_parent = parent_subloc.get("parent_id", "")
+                        current_depth -= 1
+                    else:
+                        break
+
+                # current_parent ora e' un location_id
+                location = self.get_location(current_parent)
+                if location:
+                    zone = self.get_zone(location.get("zone_id", ""))
+                    if zone:
+                        region = self.get_region(zone.get("region_id", ""))
+                        if region:
+                            breadcrumb.append({"id": zone["region_id"], "name": region["name"], "type": "region", "depth": 1})
+                        breadcrumb.append({"id": location["zone_id"], "name": zone["name"], "type": "zone", "depth": 2})
+                    breadcrumb.append({"id": current_parent, "name": location["name"], "type": "location", "depth": 3})
+
+                # Aggiungi la catena in ordine (dal piu' alto al piu' basso)
+                for item in reversed(chain):
+                    breadcrumb.append(item)
+
+        return breadcrumb
+
+    def get_location_preview(self, character_id: str, location_id: str) -> Dict[str, Any]:
+        """
+        Info dettagliate su una location per il widget preview nella World Map.
+        Cerca prima come sublocation, poi come location nel seed.
+        """
+        state_mgr = get_player_state_manager()
+        state = state_mgr.get_state(character_id)
+        pos = state.position
+
+        # Cerca nel seed: prima sublocation, poi location
+        place = self.get_sublocation(location_id, state)
+        place_type = 'sublocation'
+        if not place:
+            place = self.get_location(location_id)
+            place_type = 'location'
+        if not place:
+            return {'error': 'Location non trovata', 'id': location_id}
+
+        # NPC presenti
+        npcs = []
+        if place_type == 'sublocation':
+            for npc_id in place.get('npcs_here', []):
+                npc = self.get_npc(npc_id)
+                if npc:
+                    default_disp = npc.get('disposition_default', 'neutral')
+                    npcs.append({
+                        'id': npc_id,
+                        'name': npc.get('name', npc_id),
+                        'title': npc.get('title', ''),
+                        'disposition': state.get_npc_disposition(npc_id, default_disp)
+                    })
+
+        # Visit info da LocationMemory
+        from db.location_memory import get_memory_manager
+        memory_mgr = get_memory_manager()
+        memory = memory_mgr.get_memory(character_id, location_id)
+
+        # is_current
+        is_current = pos.get_current_id() == location_id
+
+        # has_children
+        has_children = False
+        child_count = 0
+        if place_type == 'sublocation':
+            children = place.get('children', [])
+            has_children = len(children) > 0
+            child_count = len(children)
+        elif place_type == 'location':
+            subs = place.get('sublocations', [])
+            has_children = len(subs) > 0
+            child_count = len(subs)
+
+        return {
+            'id': location_id,
+            'name': place.get('name', location_id),
+            'description': place.get('description', ''),
+            'type': place.get('type', 'unknown'),
+            'tags': place.get('tags', []),
+            'npcs': npcs,
+            'visit_count': memory.visit_count,
+            'first_visited': memory.first_visited,
+            'last_visited': memory.last_visited,
+            'has_children': has_children,
+            'child_count': child_count,
+            'is_current': is_current
+        }
+
+
+def get_spatial_context(character_id: str) -> str:
+    """Genera contesto spaziale per il GM."""
+    world_mgr = get_world_manager()
+    try:
+        return world_mgr.get_context_for_gm(character_id)
+    except Exception:
+        return ""
+
+
+def get_current_location_info(character_id: str) -> Dict[str, Any]:
+    """Ritorna info sulla location corrente."""
+    world_mgr = get_world_manager()
+    try:
+        return world_mgr.get_location_context(character_id)
+    except Exception:
+        return {"has_location": False}
 
 def get_world_manager() -> WorldManager:
     """Singleton per WorldManager"""

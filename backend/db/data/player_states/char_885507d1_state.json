@@ -1,0 +1,44 @@
+{
+  "character_id": "char_885507d1",
+  "position": {
+    "region_id": "valeria",
+    "zone_id": "lumengarde",
+    "location_id": "albachiara",
+    "sublocation_id": "albachiara.piazza"
+  },
+  "discovered_sublocations": {},
+  "discovered_connections": [],
+  "visit_history": {
+    "albachiara.piazza": [
+      "2025-12-15T17:13:32.924628"
+    ]
+  },
+  "npc_dispositions": {},
+  "flags": {},
+  "name": "",
+  "class_name": "",
+  "level": 1,
+  "stats": {
+    "current_hp": 75,
+    "conditions": [
+      {
+        "name": "stunned",
+        "duration": "1_scene"
+      },
+      {
+        "name": "bleeding",
+        "duration": "2_scenes"
+      }
+    ],
+    "spheres": {
+      "ignis": 1,
+      "vis": 1
+    },
+    "mana": {
+      "vis": 6
+    },
+    "echoes": {
+      "Magnus": 1
+    }
+  }
+}

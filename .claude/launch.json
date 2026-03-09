@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend",
+      "runtimeExecutable": "C:\\Users\\giuse\\Aethermoor\\Aethermoor_Main\\Aethermoor\\backend\\venv\\Scripts\\python.exe",
+      "runtimeArgs": ["app.py"],
+      "port": 5000,
+      "cwd": "C:\\Users\\giuse\\Aethermoor\\Aethermoor_Main\\Aethermoor\\backend"
+    },
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 4321,
+      "cwd": "C:\\Users\\giuse\\Aethermoor\\Aethermoor_Main\\Aethermoor\\frontend"
+    }
+  ]
+}

@@ -1,20 +1,44 @@
 [
   {
-    "id": "ceq_40b5eb59",
-    "character_id": "char_ec5e91b0",
-    "equipment_id": "eq_sharp_dagger",
-    "equipped_slot": "inventory"
+    "id": "ceq_93da2f89",
+    "character_id": "char_490bd5d1",
+    "equipment_id": "eq_ash_staff",
+    "equipped_slot": "main_hand"
   },
   {
-    "id": "ceq_4944e14c",
-    "character_id": "char_ec5e91b0",
-    "equipment_id": "eq_soft_leather",
-    "equipped_slot": "inventory"
+    "id": "ceq_b13338e6",
+    "character_id": "char_490bd5d1",
+    "equipment_id": "eq_cloth_robes",
+    "equipped_slot": "chest"
   },
   {
-    "id": "ceq_7533fb00",
-    "character_id": "char_ec5e91b0",
-    "equipment_id": "eq_lockpick_set",
-    "equipped_slot": "inventory"
+    "id": "ceq_d3f37a15",
+    "character_id": "char_f5c7aa55",
+    "equipment_id": "eq_iron_sword",
+    "equipped_slot": "main_hand"
+  },
+  {
+    "id": "ceq_48b759ab",
+    "character_id": "char_f5c7aa55",
+    "equipment_id": "eq_leather_armor",
+    "equipped_slot": "chest"
+  },
+  {
+    "id": "ceq_e55ede55",
+    "character_id": "char_f5c7aa55",
+    "equipment_id": "eq_wooden_shield",
+    "equipped_slot": "off_hand"
+  },
+  {
+    "id": "ceq_1136e94d",
+    "character_id": "char_d35a7be3",
+    "equipment_id": "eq_cloth_robes",
+    "equipped_slot": "chest"
+  },
+  {
+    "id": "ceq_50912669",
+    "character_id": "char_d35a7be3",
+    "equipment_id": "eq_ash_staff",
+    "equipped_slot": "main_hand"
   }
 ]

@@ -1,0 +1,127 @@
+---
+// map.astro - Mappa del mondo (hub di navigazione tra Characters e Game)
+import Layout from '../components/Layout.astro';
+import Header from '../components/ui/Header.astro';
+import WorldMap from '../components/map/WorldMap.astro';
+---
+
+<Layout title="STATISFY RPG - Mappa del Mondo">
+  <div class="map-page-container">
+    <Header showBackButton backHref="/characters?mode=play">
+      <div class="header-info">
+        <span class="char-name" id="header-name">—</span>
+        <span class="char-location" id="header-location">—</span>
+      </div>
+    </Header>
+
+    <WorldMap />
+  </div>
+</Layout>
+
+<script>
+  import { requireAuth } from '../lib/auth.js';
+  import { getCharacterBySlot, getCurrentLocation } from '../lib/api.js';
+
+  // Auth guard
+  if (!requireAuth()) { /* redirecting */ }
+
+  const slot = parseInt(new URLSearchParams(window.location.search).get('slot') || '0');
+  sessionStorage.setItem('currentSlot', slot.toString());
+
+  async function init() {
+    try {
+      const result = await getCharacterBySlot(slot);
+      if (!result.exists) {
+        window.location.href = '/characters?mode=play';
+        return;
+      }
+
+      const character = result.character;
+
+      // Header info
+      document.getElementById('header-name').textContent = character.name;
+
+      try {
+        const locResult = await getCurrentLocation(character.id);
+        if (locResult.current_location) {
+          document.getElementById('header-location').textContent = locResult.current_location.name;
+        }
+      } catch (e) {
+        // Nessuna location salvata (personaggio nuovo)
+      }
+
+      // Inizializza World Map
+      if (window.WorldMapController) {
+        const worldMap = new window.WorldMapController({
+          containerId: 'worldmap-wrapper',
+          svgId: 'worldmap-svg',
+          breadcrumbId: 'worldmap-breadcrumb',
+          depthLabelId: 'worldmap-depth',
+          characterId: character.id,
+          slot: slot,
+          onEnterChat: (locationId) => {
+            window.location.href = `/game?slot=${slot}&location=${encodeURIComponent(locationId)}`;
+          }
+        });
+
+        // Pulsante "Vai al giocatore"
+        const btnPlayer = document.getElementById('worldmap-btn-player');
+        btnPlayer?.addEventListener('click', () => worldMap.navigateToPlayer());
+
+        // Se il personaggio ha una posizione, naviga direttamente alla sua location
+        try {
+          const locResult = await getCurrentLocation(character.id);
+          if (locResult.current_location) {
+            // Auto-naviga al livello sublocation della location corrente
+            const currentLoc = locResult.current_location;
+            // Determina il location_id base (senza sublocation)
+            const locationId = currentLoc.id?.split('.')[0] || '';
+            if (locationId) {
+              await worldMap.loadDepth(3, locationId);
+            }
+          }
+        } catch (e) {
+          // Nessuna location — resta alle regioni (depth 0)
+        }
+      }
+
+    } catch (e) {
+      console.error('Errore caricamento mappa:', e);
+      setTimeout(() => {
+        window.location.href = '/characters?mode=play';
+      }, 3000);
+    }
+  }
+
+  init();
+</script>
+
+<style>
+  .map-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-md);
+    gap: 0;
+  }
+
+  .header-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .char-name {
+    font-family: var(--font-narrative);
+    font-size: 1rem;
+    color: var(--parchment);
+  }
+
+  .char-location {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ash);
+  }
+</style>

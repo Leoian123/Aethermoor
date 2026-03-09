@@ -1,0 +1,46 @@
+{
+  "character_id": "char_d35a7be3",
+  "position": {
+    "region_id": "valeria",
+    "zone_id": "lumengarde",
+    "location_id": "albachiara",
+    "sublocation_id": "albachiara.fabbro"
+  },
+  "discovered_sublocations": {},
+  "discovered_connections": [],
+  "visit_history": {
+    "albachiara.piazza": [
+      "2026-03-06T10:44:10.251459"
+    ]
+  },
+  "npc_dispositions": {},
+  "flags": {
+    "checkpoints": [
+      {
+        "region_id": "valeria",
+        "zone_id": "lumengarde",
+        "location_id": "albachiara",
+        "sublocation_id": "albachiara.piazza"
+      },
+      {
+        "region_id": "valeria",
+        "zone_id": "lumengarde",
+        "location_id": "albachiara",
+        "sublocation_id": "albachiara.fabbro"
+      }
+    ]
+  },
+  "name": "",
+  "class_name": "",
+  "level": 1,
+  "stats": {
+    "corone": 75,
+    "xp": 22,
+    "inventory": [
+      "Mantello del Cacciatore",
+      "Pozione di Cura"
+    ],
+    "current_hp": 80,
+    "conditions": []
+  }
+}

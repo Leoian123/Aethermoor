@@ -196,7 +196,13 @@
         "Può offrire un letto per la notte",
         "Conosce i segreti di molti avventori"
       ],
-      "services": ["rest", "food", "rumors"]
+      "services": ["rest", "food", "rumors"],
+      "shop_inventory": [
+        {"equipment_id": "con_health_potion", "stock": 5, "price_modifier": 1.0},
+        {"equipment_id": "con_mana_potion", "stock": 3, "price_modifier": 1.0},
+        {"equipment_id": "con_warrior_stew", "stock": 2, "price_modifier": 1.0}
+      ],
+      "buy_price_modifier": 0.4
     },
     
     "marta_fabbra": {
@@ -208,7 +214,20 @@
       "role": "merchant",
       "disposition_default": "neutral",
       "knowledge": ["weapons", "armor", "metals"],
-      "services": ["buy", "sell", "repair", "craft"]
+      "services": ["buy", "sell", "repair", "craft"],
+      "shop_inventory": [
+        {"equipment_id": "eq_iron_sword", "stock": -1, "price_modifier": 1.0},
+        {"equipment_id": "eq_sharp_dagger", "stock": -1, "price_modifier": 1.0},
+        {"equipment_id": "eq_blessed_mace", "stock": 1, "price_modifier": 1.2},
+        {"equipment_id": "eq_leather_armor", "stock": -1, "price_modifier": 1.0},
+        {"equipment_id": "eq_iron_helm", "stock": -1, "price_modifier": 1.0},
+        {"equipment_id": "eq_wooden_shield", "stock": -1, "price_modifier": 1.0},
+        {"equipment_id": "eq_leather_pauldrons", "stock": -1, "price_modifier": 1.0},
+        {"equipment_id": "eq_leather_gloves", "stock": -1, "price_modifier": 1.0},
+        {"equipment_id": "eq_leather_boots", "stock": -1, "price_modifier": 1.0},
+        {"equipment_id": "eq_copper_ring", "stock": 3, "price_modifier": 1.0}
+      ],
+      "buy_price_modifier": 0.5
     },
     
     "padre_aldric": {

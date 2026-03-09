@@ -1,0 +1,22 @@
+{
+  "character_id": "char_1e0d5722",
+  "position": {
+    "region_id": "valeria",
+    "zone_id": "lumengarde",
+    "location_id": "albachiara",
+    "sublocation_id": "albachiara.piazza"
+  },
+  "discovered_sublocations": {},
+  "discovered_connections": [],
+  "visit_history": {
+    "albachiara.piazza": [
+      "2025-12-29T15:08:07.526247"
+    ]
+  },
+  "npc_dispositions": {},
+  "flags": {},
+  "name": "",
+  "class_name": "",
+  "level": 1,
+  "stats": {}
+}

@@ -76,6 +76,15 @@ class PlayerState:
     # Flags globali di stato
     flags: Dict[str, Any] = field(default_factory=dict)
     
+    # ═══════════════════════════════════════════════════════════════
+    # STATS & CHARACTER DATA (per applicators)
+    # ═══════════════════════════════════════════════════════════════
+    
+    name: str = ""
+    class_name: str = ""
+    level: int = 1
+    stats: Dict[str, Any] = field(default_factory=dict)
+    
     def record_visit(self):
         """Registra una visita alla posizione corrente"""
         loc_id = self.position.get_current_id()
@@ -92,12 +101,28 @@ class PlayerState:
         loc_id = location_id or self.position.get_current_id()
         return self.get_visit_count(loc_id) <= 1
     
+    # ═══════════════════════════════════════════════════════════════
+    # PROCEDURAL SUBLOCATIONS
+    # ═══════════════════════════════════════════════════════════════
+    
     def add_procedural_sublocation(self, subloc_id: str, data: Dict[str, Any]):
         """Aggiunge una sublocation scoperta proceduralmente"""
         # Valida che l'ID sia figlio della location corrente
         if not subloc_id.startswith(self.position.location_id + "."):
             raise ValueError(f"Sublocation {subloc_id} non è figlia di {self.position.location_id}")
         self.discovered_sublocations[subloc_id] = data
+    
+    def has_procedural_sublocation(self, subloc_id: str) -> bool:
+        """Verifica se una sublocation procedurale esiste"""
+        return subloc_id in self.discovered_sublocations
+    
+    def get_procedural_sublocation(self, subloc_id: str) -> Optional[Dict[str, Any]]:
+        """Ottieni dati di una sublocation procedurale"""
+        return self.discovered_sublocations.get(subloc_id)
+    
+    # ═══════════════════════════════════════════════════════════════
+    # NPC DISPOSITIONS
+    # ═══════════════════════════════════════════════════════════════
     
     def get_npc_disposition(self, npc_id: str, default: str = "neutral") -> str:
         """Ottieni disposition NPC (override o default)"""
@@ -107,6 +132,30 @@ class PlayerState:
         """Imposta disposition NPC"""
         self.npc_dispositions[npc_id] = disposition
     
+    # ═══════════════════════════════════════════════════════════════
+    # INVENTORY (per applicators)
+    # ═══════════════════════════════════════════════════════════════
+    
+    def add_item(self, item_name: str) -> bool:
+        """Aggiunge item all'inventario"""
+        if "inventory" not in self.stats:
+            self.stats["inventory"] = []
+        if item_name not in self.stats["inventory"]:
+            self.stats["inventory"].append(item_name)
+            return True
+        return False
+    
+    def remove_item(self, item_name: str) -> bool:
+        """Rimuove item dall'inventario"""
+        if "inventory" in self.stats and item_name in self.stats["inventory"]:
+            self.stats["inventory"].remove(item_name)
+            return True
+        return False
+    
+    # ═══════════════════════════════════════════════════════════════
+    # SERIALIZATION
+    # ═══════════════════════════════════════════════════════════════
+    
     def to_dict(self) -> Dict[str, Any]:
         return {
             "character_id": self.character_id,
@@ -115,9 +164,38 @@ class PlayerState:
             "discovered_connections": self.discovered_connections,
             "visit_history": self.visit_history,
             "npc_dispositions": self.npc_dispositions,
-            "flags": self.flags
+            "flags": self.flags,
+            "name": self.name,
+            "class_name": self.class_name,
+            "level": self.level,
+            "stats": self.stats,
         }
     
+    def __post_init__(self):
+        """Assicura che stats e flags abbiano i default necessari."""
+        if "corone" not in self.stats:
+            self.stats["corone"] = 0
+        if "checkpoints" not in self.flags:
+            self.flags["checkpoints"] = []
+
+    def save_checkpoint(self):
+        """
+        Salva la posizione corrente come checkpoint per il respawn.
+
+        Chiamato automaticamente su cambio location e completamento quest.
+        Mantiene solo gli ultimi 5 checkpoint (LIFO).
+        """
+        checkpoint = self.position.to_dict()
+
+        # Evita duplicati consecutivi
+        checkpoints = self.flags.get("checkpoints", [])
+        if checkpoints and checkpoints[-1] == checkpoint:
+            return
+
+        checkpoints.append(checkpoint)
+        # Tieni solo gli ultimi 5
+        self.flags["checkpoints"] = checkpoints[-5:]
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'PlayerState':
         return cls(
@@ -127,7 +205,11 @@ class PlayerState:
             discovered_connections=data.get("discovered_connections", []),
             visit_history=data.get("visit_history", {}),
             npc_dispositions=data.get("npc_dispositions", {}),
-            flags=data.get("flags", {})
+            flags=data.get("flags", {}),
+            name=data.get("name", ""),
+            class_name=data.get("class_name", ""),
+            level=data.get("level", 1),
+            stats=data.get("stats", {}),
         )
 
 
@@ -191,6 +273,10 @@ class PlayerStateManager:
                 self.save_state(character_id)
         
         return self._states[character_id]
+    
+    def load_state(self, character_id: str) -> PlayerState:
+        """Alias di get_state per compatibilità con applicators"""
+        return self.get_state(character_id)
     
     def save_state(self, character_id: str):
         """Salva lo stato su file"""

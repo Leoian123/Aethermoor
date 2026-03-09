@@ -1,0 +1,262 @@
+---
+// home.astro - Hub principale di navigazione
+import Layout from '../components/Layout.astro';
+---
+
+<Layout title="STATISFY RPG - Home">
+  <div class="home-page">
+    <header class="home-header">
+      <a href="/home" class="home-logo">
+        Statisfy<span>RPG</span>
+      </a>
+      <div class="home-user">
+        <span class="home-username" id="username-display">...</span>
+      </div>
+    </header>
+
+    <main class="home-main">
+      <h1 class="home-welcome" id="welcome-text">Benvenuto ad Aethermoor</h1>
+
+      <div class="home-grid">
+        <!-- Gioca -->
+        <a href="/characters?mode=play" class="home-card" data-action="play">
+          <div class="home-card__icon">
+            <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none">
+              <path d="M14.5 17.5L3 6V3h3l11.5 11.5"/>
+              <path d="M13 19l6-6"/>
+              <path d="M16 16l4 4"/>
+              <path d="M19 21l2-2"/>
+              <path d="M14.5 6.5L18 3l3 3-3.5 3.5"/>
+            </svg>
+          </div>
+          <h2 class="home-card__title">Gioca</h2>
+          <p class="home-card__desc">Avventurati nel mondo di Aethermoor</p>
+        </a>
+
+        <!-- Forum -->
+        <a href="/forum" class="home-card" data-action="forum">
+          <div class="home-card__icon">
+            <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <h2 class="home-card__title">Forum</h2>
+          <p class="home-card__desc">Discuti con altri avventurieri</p>
+        </a>
+
+        <!-- Gestisci Personaggi -->
+        <a href="/characters" class="home-card" data-action="characters">
+          <div class="home-card__icon">
+            <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <h2 class="home-card__title">Personaggi</h2>
+          <p class="home-card__desc">Gestisci i tuoi eroi</p>
+        </a>
+
+        <!-- Impostazioni -->
+        <a href="/settings" class="home-card" data-action="settings">
+          <div class="home-card__icon">
+            <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </div>
+          <h2 class="home-card__title">Impostazioni</h2>
+          <p class="home-card__desc">Configura la tua esperienza</p>
+        </a>
+
+        <!-- Esci -->
+        <button class="home-card home-card--logout" id="btn-logout" data-action="logout">
+          <div class="home-card__icon">
+            <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </div>
+          <h2 class="home-card__title">Esci</h2>
+          <p class="home-card__desc">Torna alla schermata di accesso</p>
+        </button>
+      </div>
+    </main>
+
+    <footer class="home-footer">
+      <p>Tutto ha un prezzo.</p>
+    </footer>
+  </div>
+</Layout>
+
+<script>
+  import { requireAuth, getUser, logout } from '../lib/auth.js';
+
+  // Auth guard
+  if (!requireAuth()) { /* redirecting */ }
+
+  // Mostra username
+  const user = getUser();
+  const usernameEl = document.getElementById('username-display');
+  const welcomeEl = document.getElementById('welcome-text');
+
+  if (user && usernameEl) {
+    usernameEl.textContent = user.username;
+  }
+  if (user && welcomeEl) {
+    welcomeEl.textContent = `Benvenuto ad Aethermoor, ${user.username}`;
+  }
+
+  // Logout
+  document.getElementById('btn-logout')?.addEventListener('click', () => {
+    logout();
+  });
+</script>
+
+<style>
+  .home-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--space-md);
+  }
+
+  .home-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--mist);
+    margin-bottom: var(--space-md);
+  }
+
+  .home-logo {
+    font-family: var(--font-narrative);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .home-logo span {
+    color: var(--smoke);
+    font-weight: 300;
+  }
+
+  .home-user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .home-username {
+    color: var(--bone);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: var(--space-xs) var(--space-md);
+    background: var(--shadow);
+    border: 1px solid var(--mist);
+    border-radius: 20px;
+  }
+
+  .home-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-xl) 0;
+  }
+
+  .home-welcome {
+    font-family: var(--font-narrative);
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--parchment);
+    text-align: center;
+    margin-bottom: var(--space-xl);
+  }
+
+  .home-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-lg);
+    width: 100%;
+    max-width: 700px;
+  }
+
+  @media (min-width: 600px) {
+    .home-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .home-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-xl) var(--space-md);
+    background: linear-gradient(135deg, var(--abyss) 0%, var(--shadow) 100%);
+    border: 1px solid var(--mist);
+    border-radius: 16px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: var(--font-ui);
+    font-size: inherit;
+  }
+
+  .home-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(212, 175, 55, 0.15);
+  }
+
+  .home-card__icon {
+    color: var(--accent);
+    margin-bottom: var(--space-md);
+    transition: transform 0.3s ease;
+  }
+
+  .home-card:hover .home-card__icon {
+    transform: scale(1.1);
+  }
+
+  .home-card__title {
+    font-family: var(--font-narrative);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--parchment);
+    margin-bottom: var(--space-xs);
+  }
+
+  .home-card__desc {
+    font-size: 0.8rem;
+    color: var(--ash);
+    line-height: 1.4;
+  }
+
+  .home-card--logout {
+    background: linear-gradient(135deg, var(--shadow) 0%, rgba(196, 68, 68, 0.1) 100%);
+    border-color: rgba(196, 68, 68, 0.3);
+  }
+  .home-card--logout .home-card__icon {
+    color: var(--tempus, #c44);
+  }
+  .home-card--logout:hover {
+    border-color: var(--tempus, #c44);
+    box-shadow: 0 8px 32px rgba(196, 68, 68, 0.15);
+  }
+
+  .home-footer {
+    text-align: center;
+    padding: var(--space-xl) 0;
+    color: var(--smoke);
+    font-family: var(--font-narrative);
+    font-style: italic;
+    border-top: 1px solid var(--mist);
+  }
+</style>

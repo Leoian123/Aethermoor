@@ -1,16 +1,44 @@
 [
   {
-    "id": "csk_32ca3cbb",
-    "character_id": "char_ec5e91b0",
-    "skill_id": "sk_dagger_sneak_attack",
+    "id": "csk_c14bbda2",
+    "character_id": "char_490bd5d1",
+    "skill_id": "sk_vis_magic_dart",
     "mastery": 1,
-    "unlocked_at": "2025-12-12T13:32:02.878758"
+    "unlocked_at": "2026-03-05T18:54:39.591000"
   },
   {
-    "id": "csk_6531885b",
-    "character_id": "char_ec5e91b0",
-    "skill_id": "sk_dagger",
+    "id": "csk_4fe57bf2",
+    "character_id": "char_490bd5d1",
+    "skill_id": "sk_vis",
     "mastery": 1,
-    "unlocked_at": "2025-12-12T13:32:02.879743"
+    "unlocked_at": "2026-03-05T18:54:39.592121"
+  },
+  {
+    "id": "csk_dab65f54",
+    "character_id": "char_d35a7be3",
+    "skill_id": "sk_vis_magic_dart",
+    "mastery": 1,
+    "unlocked_at": "2026-03-06T08:24:09.816966"
+  },
+  {
+    "id": "csk_11c75532",
+    "character_id": "char_d35a7be3",
+    "skill_id": "sk_vis",
+    "mastery": 1,
+    "unlocked_at": "2026-03-06T08:24:09.818086"
+  },
+  {
+    "id": "csk_ef78a9b1",
+    "character_id": "char_f5c7aa55",
+    "skill_id": "sk_sword_power_attack",
+    "mastery": 1,
+    "unlocked_at": "2026-03-06T10:41:56.222568"
+  },
+  {
+    "id": "csk_60f95dae",
+    "character_id": "char_f5c7aa55",
+    "skill_id": "sk_sword",
+    "mastery": 1,
+    "unlocked_at": "2026-03-06T10:41:56.223605"
   }
 ]

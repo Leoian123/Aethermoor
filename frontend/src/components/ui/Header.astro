@@ -2,21 +2,22 @@
 // Header.astro - Header con logo e azioni
 export interface Props {
   showBackButton?: boolean;
+  backHref?: string;
 }
 
-const { showBackButton = false } = Astro.props;
+const { showBackButton = false, backHref = '/home' } = Astro.props;
 ---
 
 <header class="header">
   <div class="header__left">
     {showBackButton && (
-      <a href="/" class="header__back">
+      <a href={backHref} class="header__back">
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none">
           <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
       </a>
     )}
-    <a href="/" class="logo">
+    <a href="/home" class="logo">
       Statisfy<span>RPG</span>
     </a>
   </div>

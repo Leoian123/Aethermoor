@@ -1,0 +1,104 @@
+---
+// forum.astro - Placeholder Forum
+import Layout from '../components/Layout.astro';
+import Header from '../components/ui/Header.astro';
+---
+
+<Layout title="STATISFY RPG - Forum">
+  <div class="placeholder-container">
+    <Header showBackButton={true} backHref="/home">
+      <span class="placeholder-header-title">Forum</span>
+    </Header>
+
+    <main class="placeholder-main">
+      <div class="placeholder-icon">
+        <svg viewBox="0 0 24 24" width="64" height="64" stroke="currentColor" stroke-width="1" fill="none">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <h1 class="placeholder-title">Forum</h1>
+      <p class="placeholder-text">Prossimamente</p>
+      <p class="placeholder-subtext">Qui potrai discutere con altri avventurieri, condividere le tue storie e strategie.</p>
+      <a href="/home" class="placeholder-back">Torna al menu</a>
+    </main>
+  </div>
+</Layout>
+
+<script>
+  import { requireAuth } from '../lib/auth.js';
+  if (!requireAuth()) { /* redirecting */ }
+</script>
+
+<style>
+  .placeholder-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-md);
+  }
+
+  .placeholder-header-title {
+    font-size: 0.85rem;
+    color: var(--ash);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .placeholder-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: var(--space-md);
+    padding: var(--space-xl) 0;
+  }
+
+  .placeholder-icon {
+    color: var(--smoke);
+    opacity: 0.4;
+    margin-bottom: var(--space-md);
+  }
+
+  .placeholder-title {
+    font-family: var(--font-narrative);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--parchment);
+  }
+
+  .placeholder-text {
+    font-size: 1.2rem;
+    color: var(--accent);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .placeholder-subtext {
+    color: var(--ash);
+    font-size: 0.9rem;
+    max-width: 400px;
+    line-height: 1.5;
+  }
+
+  .placeholder-back {
+    display: inline-block;
+    margin-top: var(--space-lg);
+    padding: var(--space-sm) var(--space-lg);
+    color: var(--bone);
+    border: 1px solid var(--mist);
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+
+  .placeholder-back:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+</style>
